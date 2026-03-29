@@ -1,0 +1,50 @@
+name: Deploy ClinIQ to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate HTML
+        run: |
+          echo "Checking index.html exists and has content..."
+          [ -f index.html ] && echo "✓ index.html present ($(wc -l < index.html) lines)" || exit 1
+          grep -q "ClinIQ" index.html && echo "✓ App title found" || exit 1
+          grep -q "SUPABASE_URL" index.html && echo "✓ Supabase integration present" || exit 1
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          exclude_assets: '.github,node_modules,*.js,*.json,*.sql,*.csv,.gitignore'
+          commit_message: "deploy: ClinIQ v2 → GitHub Pages"
+
+      - name: Post deploy summary
+        run: |
+          echo "## ✅ ClinIQ v2 Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "🌐 **Live URL**: https://prafulpatil1978-bit.github.io/cliniqiq/" >> $GITHUB_STEP_SUMMARY
+          echo "📊 **Supabase**: dftquoyxsvfsujeqhxdj.supabase.co" >> $GITHUB_STEP_SUMMARY
+          echo "⏱️ **Deployed**: $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY

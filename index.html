@@ -1,0 +1,1973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>ClinIQ — Clinical Intelligence Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════ */
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html{font-size:14px;scroll-behavior:smooth;}
+body{background:#07101f;color:#b8cde0;font-family:'IBM Plex Sans',sans-serif;line-height:1.6;overflow-x:hidden;}
+:root{
+  --bg:#07101f; --bg2:#0c1829; --bg3:#112035; --bg4:#162844;
+  --teal:#00c6be; --teal-d:rgba(0,198,190,0.12); --teal-b:rgba(0,198,190,0.25);
+  --gold:#c9a84c; --gold-d:rgba(201,168,76,0.15); --gold-b:rgba(201,168,76,0.3);
+  --red:#e05252; --green:#3cc98a; --blue:#4a9eff; --purple:#9b6dff;
+  --border:#1a2e4a; --border2:#243d5c;
+  --text:#b8cde0; --dim:#5a7a9a; --muted:#2e4560; --white:#e8f2ff;
+  --mono:'IBM Plex Mono',monospace;
+  --serif:'Playfair Display',serif;
+  --sans:'IBM Plex Sans',sans-serif;
+  --sidebar:220px; --header:52px; --bottom-nav:60px;
+}
+button{cursor:pointer;font-family:var(--sans);}
+input,select{font-family:var(--sans);}
+a{text-decoration:none;color:inherit;}
+
+/* ══════════════════════════════════════
+   LAYOUT SHELL
+══════════════════════════════════════ */
+.shell{display:flex;min-height:100vh;}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar);flex-shrink:0;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:100;
+  transition:transform 0.3s;
+}
+.sidebar-logo{
+  padding:18px 20px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:4px;
+  background:linear-gradient(135deg,var(--teal),var(--blue));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:14px;font-weight:700;color:#07101f;
+  flex-shrink:0;
+}
+.logo-text{font-family:var(--mono);font-size:16px;font-weight:600;color:var(--teal);}
+.logo-sub{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:0.08em;margin-top:1px;}
+
+.sidebar-nav{flex:1;padding:12px 0;overflow-y:auto;}
+.nav-section{padding:8px 16px 4px;font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 16px;cursor:pointer;
+  transition:all 0.18s;border-left:3px solid transparent;
+  color:var(--dim);font-size:13px;
+}
+.nav-item svg{flex-shrink:0;opacity:0.6;transition:opacity 0.18s;}
+.nav-item:hover{color:var(--text);background:var(--bg3);}
+.nav-item:hover svg{opacity:1;}
+.nav-item.active{color:var(--teal);background:var(--teal-d);border-left-color:var(--teal);}
+.nav-item.active svg{opacity:1;}
+.nav-badge{
+  margin-left:auto;font-family:var(--mono);font-size:9px;
+  background:var(--teal-d);color:var(--teal);
+  border:1px solid var(--teal-b);padding:1px 6px;border-radius:2px;
+}
+
+.sidebar-footer{
+  padding:14px 16px;border-top:1px solid var(--border);
+  font-family:var(--mono);font-size:10px;color:var(--muted);line-height:1.7;
+}
+.sidebar-footer span{color:var(--teal);}
+
+/* MAIN */
+.main{
+  margin-left:var(--sidebar);flex:1;
+  display:flex;flex-direction:column;min-height:100vh;
+}
+
+/* TOPBAR */
+.topbar{
+  height:var(--header);position:sticky;top:0;z-index:90;
+  background:rgba(7,16,31,0.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;gap:16px;
+}
+.topbar-left{display:flex;align-items:center;gap:14px;}
+.topbar-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--white);}
+.topbar-crumb{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.top-chip{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:5px 12px;font-family:var(--mono);font-size:10px;color:var(--dim);
+  white-space:nowrap;
+}
+.top-live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;color:var(--teal);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.menu-btn{
+  display:none;background:none;border:none;color:var(--text);padding:6px;
+}
+
+/* PAGE CONTENT */
+.page{display:none;padding:24px 28px 40px;animation:fadeIn 0.2s ease;}
+.page.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+/* ══════════════════════════════════════
+   FILTER BAR
+══════════════════════════════════════ */
+.filter-bar{
+  display:flex;flex-wrap:wrap;gap:8px;
+  background:var(--bg2);border:1px solid var(--border);
+  padding:12px 16px;margin-bottom:20px;
+  align-items:center;
+}
+.filter-label{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap;}
+.filter-select{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:6px 10px;font-family:var(--mono);font-size:11px;outline:none;
+  transition:border-color 0.2s;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7a9a'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;
+  padding-right:24px;cursor:pointer;
+}
+.filter-select:focus{border-color:var(--teal);}
+.filter-btn{
+  background:var(--teal);color:var(--bg);border:none;
+  padding:6px 14px;font-family:var(--mono);font-size:11px;font-weight:600;
+  letter-spacing:0.06em;text-transform:uppercase;transition:opacity 0.2s;
+}
+.filter-btn:hover{opacity:0.85;}
+.filter-btn.sec{background:transparent;color:var(--dim);border:1px solid var(--border);}
+.filter-btn.sec:hover{border-color:var(--border2);color:var(--text);}
+.filter-search{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:6px 10px;font-family:var(--mono);font-size:11px;outline:none;
+  flex:1;min-width:160px;transition:border-color 0.2s;
+}
+.filter-search:focus{border-color:var(--teal);}
+.filter-search::placeholder{color:var(--muted);}
+
+/* ══════════════════════════════════════
+   GRID SYSTEM
+══════════════════════════════════════ */
+.grid{display:grid;gap:2px;background:var(--border);}
+.g12{grid-template-columns:1fr 1fr;}
+.g13{grid-template-columns:1fr 1fr 1fr;}
+.g14{grid-template-columns:1fr 1fr 1fr 1fr;}
+.g23{grid-template-columns:2fr 1fr;}
+.g32{grid-template-columns:1fr 2fr;}
+.g-span2{grid-column:span 2;}
+.g-span3{grid-column:span 3;}
+.g-span4{grid-column:span 4;}
+.grid-gap{gap:12px;background:transparent;}
+
+/* ══════════════════════════════════════
+   CARD
+══════════════════════════════════════ */
+.card{background:var(--bg3);padding:20px;border:1px solid var(--border);position:relative;}
+.card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;gap:8px;}
+.card-title{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--dim);line-height:1.4;}
+.card-badge{font-family:var(--mono);font-size:9px;padding:2px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--muted);white-space:nowrap;flex-shrink:0;}
+
+/* KPI CARD */
+.kpi-card{
+  background:var(--bg3);border:1px solid var(--border);
+  padding:20px;position:relative;overflow:hidden;
+  transition:border-color 0.25s;
+}
+.kpi-card:hover{border-color:var(--border2);}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--blue));opacity:0;transition:opacity 0.25s;}
+.kpi-card:hover::before{opacity:1;}
+.kpi-label{font-family:var(--mono);font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.kpi-val{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--white);line-height:1;margin-bottom:5px;}
+.kpi-sub{font-size:11px;color:var(--dim);}
+.kpi-delta{font-family:var(--mono);font-size:10px;margin-top:7px;}
+.kpi-delta.up{color:var(--green);}
+.kpi-delta.dn{color:var(--red);}
+.kpi-delta.neu{color:var(--dim);}
+
+/* ══════════════════════════════════════
+   CHARTS
+══════════════════════════════════════ */
+/* Horizontal bar */
+.hbar{display:flex;flex-direction:column;gap:7px;}
+.hbar-row{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.hbar-row:hover .hbar-fill{filter:brightness(1.2);}
+.hbar-lbl{font-family:var(--mono);font-size:10px;color:var(--dim);flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbar-track{flex:1;height:11px;background:var(--bg2);position:relative;overflow:hidden;}
+.hbar-fill{height:100%;transition:width 1.2s cubic-bezier(.16,1,.3,1);}
+.hbar-val{font-family:var(--mono);font-size:10px;color:var(--dim);width:38px;text-align:right;flex-shrink:0;}
+
+/* Funnel */
+.funnel{display:flex;flex-direction:column;gap:4px;}
+.funnel-row{display:flex;align-items:center;gap:10px;cursor:pointer;padding:2px 0;}
+.funnel-row:hover .funnel-fill{filter:brightness(1.15);}
+.funnel-label{font-family:var(--mono);font-size:10px;color:var(--dim);width:72px;flex-shrink:0;}
+.funnel-outer{flex:1;height:26px;background:var(--bg2);}
+.funnel-fill{height:100%;display:flex;align-items:center;padding-left:8px;transition:width 1.3s cubic-bezier(.16,1,.3,1);}
+.funnel-fill span{font-family:var(--mono);font-size:10px;font-weight:600;color:var(--bg);position:relative;z-index:1;}
+.funnel-n{font-family:var(--mono);font-size:10px;color:var(--dim);width:52px;text-align:right;}
+.funnel-pct{font-family:var(--mono);font-size:10px;color:var(--muted);width:32px;text-align:right;}
+
+/* Donut SVG */
+.donut-wrap{display:flex;align-items:center;gap:16px;}
+.donut-legend{display:flex;flex-direction:column;gap:8px;flex:1;min-width:0;}
+.lg-row{display:flex;align-items:center;gap:7px;cursor:pointer;padding:2px;transition:opacity 0.2s;}
+.lg-row:hover{opacity:0.8;}
+.lg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.lg-lbl{font-size:11px;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.lg-pct{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--text);flex-shrink:0;}
+
+/* Line SVG */
+.lsvg{width:100%;overflow:visible;}
+
+/* Probability rows */
+.prob-list{display:flex;flex-direction:column;gap:1px;}
+.prob-row{display:grid;grid-template-columns:130px 1fr 44px;align-items:center;gap:10px;background:var(--bg2);padding:9px 12px;}
+.prob-lbl{font-family:var(--mono);font-size:10px;color:var(--dim);}
+.prob-track{height:7px;background:var(--bg);}
+.prob-fill{height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width 1.3s cubic-bezier(.16,1,.3,1);}
+.prob-val{font-family:var(--mono);font-size:11px;color:var(--teal);font-weight:600;text-align:right;}
+
+/* ══════════════════════════════════════
+   TABLES
+══════════════════════════════════════ */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;min-width:600px;}
+thead th{
+  font-family:var(--mono);font-size:9px;letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--muted);text-align:left;padding:8px 12px;
+  border-bottom:1px solid var(--border);background:var(--bg2);
+  white-space:nowrap;cursor:pointer;user-select:none;
+}
+thead th:hover{color:var(--text);}
+thead th.sort-asc::after{content:' ↑';}
+thead th.sort-desc::after{content:' ↓';}
+tbody tr{transition:background 0.15s;cursor:pointer;}
+tbody tr:hover{background:var(--bg2);}
+tbody td{padding:9px 12px;font-size:12px;color:var(--text);border-bottom:1px solid var(--border);}
+tbody tr:last-child td{border-bottom:none;}
+
+/* Pills */
+.pill{display:inline-block;padding:2px 8px;border-radius:2px;font-family:var(--mono);font-size:9px;font-weight:600;letter-spacing:0.04em;white-space:nowrap;}
+.ph0{background:rgba(74,158,255,0.1);color:#4a9eff;border:1px solid rgba(74,158,255,0.25);}
+.ph1{background:rgba(0,198,190,0.1);color:var(--teal);border:1px solid rgba(0,198,190,0.25);}
+.ph2{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.25);}
+.ph3{background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25);}
+.ph4{background:rgba(60,201,138,0.12);color:var(--green);border:1px solid rgba(60,201,138,0.25);}
+.pill-rec{background:rgba(60,201,138,0.12);color:var(--green);border:1px solid rgba(60,201,138,0.25);}
+.pill-comp{background:rgba(90,122,154,0.15);color:var(--dim);border:1px solid var(--border);}
+.pill-susp{background:rgba(224,82,82,0.12);color:var(--red);border:1px solid rgba(224,82,82,0.25);}
+.pill-avail{background:rgba(0,198,190,0.12);color:var(--teal);border:1px solid rgba(0,198,190,0.25);}
+.pill-prop{background:rgba(90,122,154,0.1);color:var(--muted);border:1px solid var(--border);}
+.pill-part{background:rgba(155,109,255,0.12);color:var(--purple);border:1px solid rgba(155,109,255,0.25);}
+.pill-low{color:var(--green);font-family:var(--mono);font-size:11px;font-weight:600;}
+.pill-med{color:var(--gold);font-family:var(--mono);font-size:11px;font-weight:600;}
+.pill-high{color:var(--red);font-family:var(--mono);font-size:11px;font-weight:600;}
+
+/* ══════════════════════════════════════
+   MODAL / DRILL-DOWN
+══════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(7,16,31,0.88);
+  z-index:500;display:none;align-items:center;justify-content:center;
+  padding:20px;backdrop-filter:blur(4px);
+}
+.modal-overlay.open{display:flex;}
+.modal{
+  background:var(--bg2);border:1px solid var(--border2);
+  width:100%;max-width:760px;max-height:90vh;
+  display:flex;flex-direction:column;
+  animation:slideUp 0.22s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.modal-header{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:18px 24px;border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.modal-title{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--white);}
+.modal-close{
+  background:none;border:none;color:var(--dim);font-size:20px;line-height:1;
+  padding:4px;transition:color 0.2s;
+}
+.modal-close:hover{color:var(--white);}
+.modal-body{padding:24px;overflow-y:auto;flex:1;}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
+.modal-stat{background:var(--bg3);border:1px solid var(--border);padding:14px 16px;}
+.modal-stat-label{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.modal-stat-val{font-family:var(--mono);font-size:18px;font-weight:600;color:var(--teal);}
+.modal-section{margin-bottom:18px;}
+.modal-section-title{font-family:var(--mono);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--teal);margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.modal-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.modal-row:last-child{border-bottom:none;}
+.modal-row-label{font-size:12px;color:var(--dim);}
+.modal-row-val{font-family:var(--mono);font-size:12px;color:var(--text);}
+
+/* ══════════════════════════════════════
+   SECTION HEADERS
+══════════════════════════════════════ */
+.sec-head{margin-bottom:20px;}
+.sec-eye{font-family:var(--mono);font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:var(--teal);display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.sec-eye::before{content:'';display:block;width:20px;height:1px;background:var(--teal);}
+.sec-title{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--white);line-height:1.1;margin-bottom:8px;}
+.sec-desc{color:var(--dim);font-size:13px;line-height:1.75;max-width:620px;}
+
+/* ══════════════════════════════════════
+   SPECIFIC COMPONENTS
+══════════════════════════════════════ */
+/* Insight cards */
+.insight-row{display:flex;flex-direction:column;gap:8px;}
+.insight-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-left:3px solid var(--teal);
+  padding:12px 14px;
+}
+.insight-card.warn{border-left-color:var(--gold);}
+.insight-card.alert{border-left-color:var(--red);}
+.insight-label{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.insight-text{font-size:12px;color:var(--text);line-height:1.6;}
+.insight-val{font-family:var(--mono);font-size:13px;font-weight:600;color:var(--teal);margin-top:4px;}
+.insight-val.warn{color:var(--gold);}
+.insight-val.alert{color:var(--red);}
+
+/* Deal comparables */
+.deal-row{
+  display:grid;grid-template-columns:1fr auto auto auto auto;
+  gap:10px;align-items:center;
+  padding:10px 12px;background:var(--bg2);
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;
+}
+.deal-row:hover{background:var(--bg3);}
+.deal-asset{font-size:12px;color:var(--white);}
+.deal-sub{font-size:10px;color:var(--dim);margin-top:2px;}
+.deal-val{font-family:var(--mono);font-size:11px;color:var(--gold);text-align:right;white-space:nowrap;}
+.deal-val.teal{color:var(--teal);}
+
+/* VC gap cards */
+.gap-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.gap-card{
+  background:var(--bg2);border:1px solid var(--border);
+  padding:16px;position:relative;
+}
+.gap-num{font-family:var(--mono);font-size:32px;font-weight:600;color:var(--muted);opacity:0.2;position:absolute;top:10px;right:14px;}
+.gap-type{font-family:var(--mono);font-size:9px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;display:inline-block;padding:2px 8px;}
+.gap-type.critical{background:rgba(224,82,82,0.12);color:var(--red);border:1px solid rgba(224,82,82,0.2);}
+.gap-type.major{background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.2);}
+.gap-type.moderate{background:rgba(0,198,190,0.1);color:var(--teal);border:1px solid rgba(0,198,190,0.2);}
+.gap-title{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--white);margin-bottom:6px;}
+.gap-desc{font-size:11px;color:var(--dim);line-height:1.6;}
+
+/* Tab groups */
+.tab-group{display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);background:var(--bg2);width:fit-content;}
+.tab-btn{
+  background:transparent;color:var(--dim);border:none;
+  padding:8px 16px;font-family:var(--mono);font-size:10px;letter-spacing:0.08em;
+  text-transform:uppercase;transition:all 0.18s;border-right:1px solid var(--border);
+}
+.tab-btn:last-child{border-right:none;}
+.tab-btn.active{background:var(--teal);color:var(--bg);font-weight:700;}
+.tab-btn:hover:not(.active){color:var(--text);background:var(--bg3);}
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* ══════════════════════════════════════
+   BOTTOM NAV (mobile)
+══════════════════════════════════════ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  height:var(--bottom-nav);
+  background:var(--bg2);border-top:1px solid var(--border);
+  display:flex;align-items:stretch;
+}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;cursor:pointer;transition:color 0.15s;color:var(--muted);
+  font-family:var(--mono);font-size:8px;letter-spacing:0.08em;text-transform:uppercase;
+  border-right:1px solid var(--border);
+}
+.bn-item:last-child{border-right:none;}
+.bn-item.active{color:var(--teal);}
+.bn-item svg{width:18px;height:18px;}
+
+/* ══════════════════════════════════════
+   TICKER
+══════════════════════════════════════ */
+.ticker{height:30px;background:var(--bg2);border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;}
+.ticker-track{display:flex;gap:48px;animation:scroll 38s linear infinite;white-space:nowrap;}
+@keyframes scroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.t-it{font-family:var(--mono);font-size:10px;display:flex;gap:6px;}
+.t-k{color:var(--muted);}
+.t-v{color:var(--teal);}
+.t-u{color:var(--green);}
+.t-d{color:var(--red);}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — TABLET
+══════════════════════════════════════ */
+@media(max-width:1100px){
+  .g13{grid-template-columns:1fr 1fr;}
+  .g14{grid-template-columns:1fr 1fr;}
+  .g-span3,.g-span4{grid-column:span 2;}
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE — MOBILE
+══════════════════════════════════════ */
+@media(max-width:768px){
+  :root{--sidebar:0px;}
+  .sidebar{transform:translateX(-100%);width:240px;}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding-bottom:var(--bottom-nav);}
+  .topbar{padding:0 14px;}
+  .topbar-right .top-chip{display:none;}
+  .menu-btn{display:flex;align-items:center;justify-content:center;}
+  .page{padding:14px 14px 28px;}
+  .bottom-nav{display:flex;}
+  .g12,.g13,.g14,.g23,.g32{grid-template-columns:1fr;}
+  .g-span2,.g-span3,.g-span4{grid-column:span 1;}
+  .filter-bar{padding:10px 12px;}
+  .sec-title{font-size:22px;}
+  .modal{max-height:95vh;}
+  .modal-grid{grid-template-columns:1fr;}
+  .gap-grid{grid-template-columns:1fr;}
+  .tab-group{flex-wrap:wrap;}
+  .kpi-val{font-size:24px;}
+}
+
+/* Mobile sidebar overlay */
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;display:none;}
+.sidebar-overlay.open{display:block;}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-mark">CQ</div>
+    <div>
+      <div class="logo-text">ClinIQ</div>
+      <div class="logo-sub">Clinical Intelligence</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Analytics</div>
+    <div class="nav-item active" onclick="goPage('overview',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      Overview
+    </div>
+    <div class="nav-item" onclick="goPage('pipeline',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Pipeline
+      <span class="nav-badge">500K+</span>
+    </div>
+    <div class="nav-item" onclick="goPage('molecules',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="19" cy="15" r="2"/><circle cx="12" cy="19" r="2"/><circle cx="5" cy="15" r="2"/><circle cx="5" cy="9" r="2"/></svg>
+      Molecules
+      <span class="nav-badge">50K</span>
+    </div>
+    <div class="nav-item" onclick="goPage('sponsors',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Sponsors
+    </div>
+    <div class="nav-item" onclick="goPage('therapeutic',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"/></svg>
+      Therapeutic Areas
+    </div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="goPage('deals',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      Deal Comps
+    </div>
+    <div class="nav-item" onclick="goPage('whitespace',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Whitespace Map
+    </div>
+    <div class="nav-section">Methodology</div>
+    <div class="nav-item" onclick="goPage('sources',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Data Sources
+    </div>
+    <div class="nav-item" onclick="goPage('gaps',this)">
+      <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      VC Gap Analysis
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    Data: <span>ClinicalTrials.gov</span> · EudraCT<br>WHO ICTRP · FDA · EMA<br>Updated: <span>Q1 2025</span><br>
+    DB: <span id="db-status-badge" style="font-size:9px;">○ loading…</span>
+  </div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="menu-btn" onclick="toggleSidebar()">
+        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="topbar-title" id="topTitle">Overview</span>
+      <span class="topbar-crumb" id="topCrumb">/ ClinIQ Intelligence Platform</span>
+    </div>
+    <div class="topbar-right">
+      <div class="top-live"><span class="live-dot"></span>Live</div>
+      <div class="top-chip">50,000 Molecules</div>
+      <div class="top-chip">500K+ Trials</div>
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span class="t-it"><span class="t-k">ACTIVE TRIALS</span><span class="t-v">504,221</span></span>
+      <span class="t-it"><span class="t-k">PHASE III</span><span class="t-v t-u">↑8.2% YOY</span></span>
+      <span class="t-it"><span class="t-k">TOP AREA</span><span class="t-v">Oncology·38%</span></span>
+      <span class="t-it"><span class="t-k">FDA APPROVALS FY25</span><span class="t-v">47 NDA/BLA</span></span>
+      <span class="t-it"><span class="t-k">PATENT CLIFF 25–28</span><span class="t-v t-d">$320B at risk</span></span>
+      <span class="t-it"><span class="t-k">RARE DISEASE GROWTH</span><span class="t-v t-u">↑18.4% YOY</span></span>
+      <span class="t-it"><span class="t-k">DEAL VOLUME FY25</span><span class="t-v t-u">↑22% vs FY24</span></span>
+      <span class="t-it"><span class="t-k">ORPHAN DESIGNATIONS</span><span class="t-v t-u">↑14.4% YOY</span></span>
+      <span class="t-it"><span class="t-k">ACTIVE TRIALS</span><span class="t-v">504,221</span></span>
+      <span class="t-it"><span class="t-k">PHASE III</span><span class="t-v t-u">↑8.2% YOY</span></span>
+      <span class="t-it"><span class="t-k">TOP AREA</span><span class="t-v">Oncology·38%</span></span>
+      <span class="t-it"><span class="t-k">FDA APPROVALS FY25</span><span class="t-v">47 NDA/BLA</span></span>
+      <span class="t-it"><span class="t-k">PATENT CLIFF 25–28</span><span class="t-v t-d">$320B at risk</span></span>
+      <span class="t-it"><span class="t-k">RARE DISEASE GROWTH</span><span class="t-v t-u">↑18.4% YOY</span></span>
+      <span class="t-it"><span class="t-k">DEAL VOLUME FY25</span><span class="t-v t-u">↑22% vs FY24</span></span>
+      <span class="t-it"><span class="t-k">ORPHAN DESIGNATIONS</span><span class="t-v t-u">↑14.4% YOY</span></span>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: OVERVIEW ══════════ -->
+  <div class="page active" id="page-overview">
+    <div class="sec-head">
+      <div class="sec-eye">Platform Overview</div>
+      <h2 class="sec-title">Clinical Intelligence Dashboard</h2>
+      <p class="sec-desc">Platform-wide KPIs, BD opportunity alerts, and pipeline health snapshot across 500,000+ global clinical trials.</p>
+    </div>
+
+    <div class="grid g14 grid-gap" style="margin-bottom:14px;">
+      <div class="kpi-card"><div class="kpi-label">Molecules Tracked</div><div class="kpi-val" id="ov-k1">50,412</div><div class="kpi-sub">All phases &amp; indications</div><div class="kpi-delta up">↑ 12.1% YOY</div></div>
+      <div class="kpi-card"><div class="kpi-label">Active Trials</div><div class="kpi-val" id="ov-k2">504,221</div><div class="kpi-sub">Phase 0 – IV, global</div><div class="kpi-delta up">↑ 8.2% YOY</div></div>
+      <div class="kpi-card"><div class="kpi-label">BD Opportunities</div><div class="kpi-val">1,847</div><div class="kpi-sub">BDOS score ≥ 65</div><div class="kpi-delta up">↑ 14.3% vs Q4</div></div>
+      <div class="kpi-card"><div class="kpi-label">Patent Cliffs 2025–28</div><div class="kpi-val">$320B</div><div class="kpi-sub">Revenue at risk, top 40 assets</div><div class="kpi-delta dn">▲ Opportunity signal</div></div>
+    </div>
+
+    <div class="grid g23 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">5-Year Trial Initiation Trend (Global)</span><span class="card-badge">2020–2025</span></div>
+        <svg class="lsvg" height="160" viewBox="0 0 600 160" id="ov-trend" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Top BD Opportunity Alerts</span><span class="card-badge">BDOS ≥ 80</span></div>
+        <div class="insight-row" id="ov-alerts"></div>
+      </div>
+    </div>
+
+    <div class="grid g13 grid-gap">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Phase Distribution (All TAs)</span><span class="card-badge">2025 Snapshot</span></div>
+        <div class="funnel" id="ov-funnel"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Trial Status (Active Set)</span><span class="card-badge">Live</span></div>
+        <div class="donut-wrap"><svg width="110" height="110" viewBox="0 0 110 110" id="ov-donut"></svg><div class="donut-legend" id="ov-donut-leg"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Overall LoS by Phase</span><span class="card-badge">Industry Avg</span></div>
+        <div class="prob-list" id="ov-prob"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: PIPELINE ══════════ -->
+  <div class="page" id="page-pipeline">
+    <div class="sec-head">
+      <div class="sec-eye">Pipeline Analytics</div>
+      <h2 class="sec-title">Global Trial Pipeline</h2>
+      <p class="sec-desc">Phase progression, transition probabilities, geographic distribution, and temporal trends — filterable by therapeutic area, region, and trial status.</p>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Filter:</span>
+      <select class="filter-select" id="pip-ta" onchange="renderPipeline()">
+        <option value="all">All Therapeutic Areas</option>
+        <option value="oncology">Oncology</option>
+        <option value="cns">CNS / Neurology</option>
+        <option value="cardio">Cardiovascular</option>
+        <option value="immuno">Immunology</option>
+        <option value="rare">Rare / Orphan</option>
+        <option value="infect">Infectious Disease</option>
+        <option value="metabolic">Metabolic</option>
+        <option value="resp">Respiratory</option>
+      </select>
+      <select class="filter-select" id="pip-region" onchange="renderPipeline()">
+        <option value="all">All Regions</option>
+        <option value="na">North America</option>
+        <option value="eu">Europe</option>
+        <option value="apac">Asia Pacific</option>
+        <option value="in">India</option>
+        <option value="cn">China</option>
+      </select>
+      <select class="filter-select" id="pip-phase" onchange="renderPipeline()">
+        <option value="all">All Phases</option>
+        <option value="1">Phase I</option>
+        <option value="2">Phase II</option>
+        <option value="3">Phase III</option>
+      </select>
+      <button class="filter-btn sec" onclick="resetFilters('pip')">Reset</button>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);">Affects: Phase Funnel · Trial Trends · Geo Distribution · Indication Volume</span>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Phase Funnel — Click to Drill Down</span><span class="card-badge" id="pip-funnel-badge">All TAs</span></div>
+        <div class="funnel" id="pip-funnel"></div>
+        <div id="pip-funnel-drilldown" style="margin-top:14px;display:none;"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Phase Transition Probability by TA</span><span class="card-badge">LoS Benchmarks</span></div>
+        <div class="prob-list" id="pip-prob"></div>
+      </div>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Annual Trial Initiations</span><span class="card-badge">2015–2025</span></div>
+        <svg class="lsvg" height="170" viewBox="0 0 560 170" id="pip-trend" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Geographic Distribution — Phase II/III</span><span class="card-badge">% Share</span></div>
+        <div class="hbar" id="pip-geo"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">Top 15 Indications by Active Trial Volume</span><span class="card-badge">Click bar to see trial list</span></div>
+      <div class="hbar" id="pip-indications" style="margin-top:4px;"></div>
+      <div id="pip-ind-drilldown" style="margin-top:14px;display:none;"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: MOLECULES ══════════ -->
+  <div class="page" id="page-molecules">
+    <div class="sec-head">
+      <div class="sec-eye">Molecule Intelligence</div>
+      <h2 class="sec-title">Drug &amp; Molecule Browser</h2>
+      <p class="sec-desc">Search, filter, and drill into 50,000+ molecules. Click any row for full analytics: safety profile, patent timeline, trial history, and BD opportunity score.</p>
+    </div>
+
+    <div class="filter-bar">
+      <input class="filter-search" id="mol-q" placeholder="Search molecule, INN, indication, sponsor, MOA..." oninput="renderMolTable()">
+      <select class="filter-select" id="mol-phase" onchange="renderMolTable()">
+        <option value="all">All Phases</option>
+        <option value="ph1">Phase I</option>
+        <option value="ph2">Phase II</option>
+        <option value="ph3">Phase III</option>
+        <option value="ph4">Registered</option>
+      </select>
+      <select class="filter-select" id="mol-ta" onchange="renderMolTable()">
+        <option value="all">All TAs</option>
+        <option value="Oncology">Oncology</option>
+        <option value="CNS">CNS</option>
+        <option value="Cardiology">Cardiology</option>
+        <option value="Immunology">Immunology</option>
+        <option value="Metabolic">Metabolic</option>
+        <option value="Rare">Rare Disease</option>
+      </select>
+      <select class="filter-select" id="mol-bd" onchange="renderMolTable()">
+        <option value="all">All BD Status</option>
+        <option value="Available">Available</option>
+        <option value="Partnered">Partnered</option>
+        <option value="Proprietary">Proprietary</option>
+      </select>
+      <select class="filter-select" id="mol-safety" onchange="renderMolTable()">
+        <option value="all">All Safety</option>
+        <option value="Low">Low Signal</option>
+        <option value="Medium">Med Signal</option>
+        <option value="High">High Signal</option>
+      </select>
+      <button class="filter-btn sec" onclick="resetFilters('mol')">Reset</button>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);">Affects: Molecule Table only · Patent &amp; MOA charts are global</span>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Patent Cliff — Revenue at Risk</span><span class="card-badge">2025–2032</span></div>
+        <div class="hbar" id="mol-patent"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">MOA Class Distribution</span><span class="card-badge">Active Pipeline</span></div>
+        <div class="hbar" id="mol-moa"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Molecule Intelligence Browser — <span id="mol-count">20</span> records shown · Click row for full profile</span>
+        <span class="card-badge">50,000 Total</span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortMols('name')">Molecule</th>
+              <th onclick="sortMols('phase')">Phase</th>
+              <th onclick="sortMols('ta')">TA</th>
+              <th onclick="sortMols('indication')">Indication</th>
+              <th onclick="sortMols('sponsor')">Sponsor</th>
+              <th onclick="sortMols('moa')">MOA</th>
+              <th onclick="sortMols('safety')">Safety</th>
+              <th onclick="sortMols('patent')">Patent</th>
+              <th onclick="sortMols('bdos')">BDOS</th>
+              <th onclick="sortMols('bd')">BD Status</th>
+            </tr>
+          </thead>
+          <tbody id="mol-tbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;align-items:center;">
+        <button class="filter-btn sec" onclick="molPage(-1)" id="mol-prev">← Prev</button>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--dim)" id="mol-page-info">Page 1</span>
+        <button class="filter-btn sec" onclick="molPage(1)" id="mol-next">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: SPONSORS ══════════ -->
+  <div class="page" id="page-sponsors">
+    <div class="sec-head">
+      <div class="sec-eye">Sponsor &amp; Company Analysis</div>
+      <h2 class="sec-title">BD &amp; Sponsor Intelligence</h2>
+      <p class="sec-desc">Pipeline depth rankings, BD opportunity scoring, M&amp;A activity, and competitive landscape — click any sponsor for a full intelligence dossier.</p>
+    </div>
+
+    <div class="filter-bar">
+      <input class="filter-search" id="sp-q" placeholder="Search sponsor name..." oninput="renderSponsors()">
+      <select class="filter-select" id="sp-region" onchange="renderSponsors()">
+        <option value="all">All Regions</option>
+        <option value="USA">USA</option>
+        <option value="Europe">Europe</option>
+        <option value="Japan">Japan</option>
+        <option value="Emerging">Emerging Markets</option>
+      </select>
+      <select class="filter-select" id="sp-size" onchange="renderSponsors()">
+        <option value="all">All Sizes</option>
+        <option value="big">Big Pharma (>$20B rev)</option>
+        <option value="mid">Mid-Size ($1–20B)</option>
+        <option value="small">Biotech (<$1B)</option>
+      </select>
+      <button class="filter-btn sec" onclick="resetFilters('sp')">Reset</button>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);">Affects: Pipeline Ranking · BDOS Targets · M&amp;A Feed</span>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Pipeline Depth Ranking — Click to drill</span><span class="card-badge">by Active Trials</span></div>
+        <div id="sp-rank-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">BD Opportunity Scoring (BDOS)</span><span class="card-badge">Top Acquisition/Licensing Targets</span></div>
+        <div id="sp-bdos-list"></div>
+      </div>
+    </div>
+
+    <div class="grid g12 grid-gap">
+      <div class="card">
+        <div class="card-head"><span class="card-title">M&amp;A / Licensing Activity Timeline</span><span class="card-badge">2022–2025</span></div>
+        <div id="sp-deals-feed"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Pipeline Phase Mix by Sponsor Type</span><span class="card-badge">Big Pharma vs Biotech</span></div>
+        <div class="hbar" id="sp-phase-mix"></div>
+        <div style="margin-top:16px;">
+          <div class="card-head" style="margin-bottom:8px;"><span class="card-title">Regulatory Premium Distribution</span></div>
+          <div class="hbar" id="sp-reg-premium"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: THERAPEUTIC ══════════ -->
+  <div class="page" id="page-therapeutic">
+    <div class="sec-head">
+      <div class="sec-eye">Therapeutic Area Intelligence</div>
+      <h2 class="sec-title">Market &amp; Indication Trends</h2>
+      <p class="sec-desc">Market sizing, trial volume trends, competitive density, unmet need scores, and failure mode analysis — select an area to drill into full indication-level analytics.</p>
+    </div>
+
+    <div class="filter-bar">
+      <span class="filter-label">Select TA:</span>
+      <select class="filter-select" id="ta-select" onchange="renderTA()">
+        <option value="all">All Therapeutic Areas</option>
+        <option value="oncology">Oncology</option>
+        <option value="cns">CNS / Neurology</option>
+        <option value="cardio">Cardiovascular</option>
+        <option value="immuno">Immunology / Inflammation</option>
+        <option value="metabolic">Metabolic / Endocrine</option>
+        <option value="rare">Rare / Orphan Disease</option>
+        <option value="infect">Infectious Disease</option>
+        <option value="resp">Respiratory</option>
+      </select>
+      <select class="filter-select" id="ta-metric">
+        <option value="trials">Trial Volume</option>
+        <option value="market">Market Size ($B)</option>
+        <option value="density">Competitive Density</option>
+      </select>
+      <button class="filter-btn" onclick="renderTA()">Apply</button>
+    </div>
+
+    <div class="grid g14 grid-gap" style="margin-bottom:14px;" id="ta-kpis"></div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Market Size Trend ($B) — 2020→2025 Actual + 2030 Projection</span><span class="card-badge" id="ta-mkt-badge">2020–2030E</span></div>
+        <svg class="lsvg" height="180" viewBox="0 0 520 180" id="ta-mkt" preserveAspectRatio="none"></svg>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-top:6px;">Source: IQVIA, GlobalData. 2024 actuals; 2025–2030 CAGR projections.</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Trial Volume Growth (YOY)</span><span class="card-badge">All TAs · 2024</span></div>
+        <div class="hbar" id="ta-growth"></div>
+      </div>
+    </div>
+
+    <div class="grid g12 grid-gap">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Likelihood of Approval — Phase I → NDA/BLA (%)</span><span class="card-badge">LoS by TA · Industry Benchmark</span></div>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:10px;">Overall industry avg: <span style="color:var(--teal)">9.6%</span> (BIO/Citeline, 2023). Higher = better BD risk profile.</div>
+        <div class="hbar" id="ta-los"></div>
+        <div style="margin-top:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--muted);">⚠ Oncology LoS (5.1%) is the lowest of all TAs — high-volume pipeline does not equal high probability of return. Validate with failure mode analysis.</div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Failure Mode Analysis</span><span class="card-badge">Why Trials Fail · By TA</span></div>
+        <div id="ta-failure"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: DEAL COMPS ══════════ -->
+  <div class="page" id="page-deals">
+    <div class="sec-head">
+      <div class="sec-eye">Deal Intelligence</div>
+      <h2 class="sec-title">Licensing &amp; M&amp;A Comparables</h2>
+      <p class="sec-desc">Real comparable deal structures — upfront payments, milestone caps, royalty ranges — by phase, TA, and modality. The BD valuation context you need before the deal table.</p>
+    </div>
+
+    <div class="filter-bar">
+      <select class="filter-select" id="deal-phase" onchange="renderDeals()">
+        <option value="all">All Phases</option>
+        <option value="Phase I">Phase I</option>
+        <option value="Phase II">Phase II</option>
+        <option value="Phase III">Phase III</option>
+        <option value="Approved">Post-Approval</option>
+      </select>
+      <select class="filter-select" id="deal-ta" onchange="renderDeals()">
+        <option value="all">All TAs</option>
+        <option value="Oncology">Oncology</option>
+        <option value="CNS">CNS</option>
+        <option value="Immunology">Immunology</option>
+        <option value="Rare">Rare Disease</option>
+        <option value="Metabolic">Metabolic</option>
+      </select>
+      <select class="filter-select" id="deal-type" onchange="renderDeals()">
+        <option value="all">All Deal Types</option>
+        <option value="Licensing">Licensing</option>
+        <option value="Acquisition">Acquisition</option>
+        <option value="Co-Dev">Co-Development</option>
+      </select>
+      <button class="filter-btn sec" onclick="resetFilters('deal')">Reset</button>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--muted);">Affects: Deal Comparables list · Count KPI · Benchmark charts static</span>
+    </div>
+
+    <div class="grid g13 grid-gap" style="margin-bottom:14px;">
+      <div class="kpi-card"><div class="kpi-label">Avg Ph II Upfront</div><div class="kpi-val">$142M</div><div class="kpi-sub">Median: $85M</div><div class="kpi-delta up">↑ 18% vs 2023</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Ph III Total Potential</div><div class="kpi-val">$2.8B</div><div class="kpi-sub">Milestones + royalties</div><div class="kpi-delta up">↑ 24% vs 2023</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Royalty Rate Range</div><div class="kpi-val">8–18%</div><div class="kpi-sub">Net sales · Phase II/III</div><div class="kpi-delta neu">Stable YOY</div></div>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Deal Value Distribution by Phase</span><span class="card-badge">Upfront $M</span></div>
+        <div class="hbar" id="deal-upfront"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Deal Activity by Therapeutic Area</span><span class="card-badge">2023–2025</span></div>
+        <div class="hbar" id="deal-ta-bars"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">Deal Comparables — <span id="deal-count">All</span> transactions · Click for details</span><span class="card-badge">2022–2025</span></div>
+      <div id="deal-list"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: WHITESPACE MAP ══════════ -->
+  <div class="page" id="page-whitespace">
+    <div class="sec-head">
+      <div class="sec-eye">BD Whitespace Intelligence</div>
+      <h2 class="sec-title">Indication Whitespace Map</h2>
+      <p class="sec-desc">Where unmet need is high, competitive density is low, and market size justifies investment — the BD opportunity sweet spot that top acquirers find first.</p>
+    </div>
+
+    <div class="grid g13 grid-gap" style="margin-bottom:14px;">
+      <div class="kpi-card"><div class="kpi-label">High Whitespace Indications</div><div class="kpi-val">47</div><div class="kpi-sub">Density score &lt; 0.3</div><div class="kpi-delta up">↑ 8 new vs Q4</div></div>
+      <div class="kpi-card"><div class="kpi-label">Avg Market Size (Whitespace)</div><div class="kpi-val">$8.4B</div><div class="kpi-sub">Addressable per indication</div><div class="kpi-delta up">↑ 12% vs Q4</div></div>
+      <div class="kpi-card"><div class="kpi-label">Emerging Market Opp.</div><div class="kpi-val">23</div><div class="kpi-sub">India + China underserved</div><div class="kpi-delta up">↑ 6 new</div></div>
+    </div>
+
+    <div class="grid g12 grid-gap" style="margin-bottom:14px;">
+      <div class="card">
+        <div class="card-head"><span class="card-title">Unmet Need Score vs Competitive Density</span><span class="card-badge">Bubble = Market Size · Click for details</span></div>
+        <div style="position:relative;height:240px;background:var(--bg2);" id="ws-scatter">
+          <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;color:var(--muted);">← Competitive Density →</div>
+          <div style="position:absolute;left:6px;top:50%;transform:translateY(-50%) rotate(-90deg);font-family:var(--mono);font-size:9px;color:var(--muted);">Unmet Need</div>
+          <div style="position:absolute;top:8px;left:38px;bottom:28px;border-left:1px solid var(--border);border-bottom:1px solid var(--border);right:8px;" id="ws-plot"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">Top Whitespace Indications by Score</span><span class="card-badge">Composite WS Index</span></div>
+        <div class="hbar" id="ws-rank"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><span class="card-title">Emerging Market Opportunity Radar — India &amp; China Pipeline Gaps</span><span class="card-badge">BD timing signal</span></div>
+      <div id="ws-emerging"></div>
+    </div>
+  </div>
+
+  <!-- ══════════ PAGE: SOURCES ══════════ -->
+  <div class="page" id="page-sources">
+    <div class="sec-head">
+      <div class="sec-eye">Data Transparency</div>
+      <h2 class="sec-title">Sources &amp; Data Architecture</h2>
+    </div>
+    <div class="grid g13 grid-gap" style="margin-bottom:14px;">
+      <div class="kpi-card"><div class="kpi-label">Primary Sources</div><div class="kpi-val">14+</div></div>
+      <div class="kpi-card"><div class="kpi-label">Refresh Cadence</div><div class="kpi-val">Weekly</div></div>
+      <div class="kpi-card"><div class="kpi-label">Data Completeness</div><div class="kpi-val">98.2%</div></div>
+    </div>
+    <div class="grid g12 grid-gap" id="sources-grid"></div>
+  </div>
+
+  <!-- ══════════ PAGE: VC GAP ANALYSIS ══════════ -->
+  <div class="page" id="page-gaps">
+    <div class="sec-head">
+      <div class="sec-eye">VC Intelligence Critique</div>
+      <h2 class="sec-title">Holistic Gap Analysis</h2>
+      <p class="sec-desc">Acting as an experienced Pharma BD/Acquisition VC — critical assessment with supporting data of what a BD-decision-grade platform must address.</p>
+    </div>
+
+    <!-- Gap 1: Deal Velocity -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--red)">① CRITICAL — Deal Velocity / Phase Timing</span><span class="card-badge" style="color:var(--red);border-color:rgba(224,82,82,0.3)">Missing</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">An asset stuck in Phase II for 4 years vs. 18 months has fundamentally different capital efficiency, team quality signals, and rNPV profiles. Phase velocity is prerequisite for any BD valuation.</div>
+      <div class="grid g14 grid-gap">
+        <div style="background:var(--bg2);padding:12px;border:1px solid var(--border);"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px">MEDIAN PH II DURATION</div><div style="font-family:var(--mono);font-size:22px;color:var(--teal)">24 mo</div><div style="font-size:10px;color:var(--dim)">Industry median, all TAs</div></div>
+        <div style="background:var(--bg2);padding:12px;border:1px solid var(--border);"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px">ONCOLOGY PH II</div><div style="font-family:var(--mono);font-size:22px;color:var(--gold)">28 mo</div><div style="font-size:10px;color:var(--dim)">Extended by endpoint complexity</div></div>
+        <div style="background:var(--bg2);padding:12px;border:1px solid var(--border);"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px">CNS PH II</div><div style="font-family:var(--mono);font-size:22px;color:var(--purple)">36 mo</div><div style="font-size:10px;color:var(--dim)">Highest duration — endpoint burden</div></div>
+        <div style="background:var(--bg2);padding:12px;border:1px solid var(--border);"><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:6px">RARE DISEASE PH II</div><div style="font-family:var(--mono);font-size:22px;color:var(--green)">18 mo</div><div style="font-size:10px;color:var(--dim)">ODD + smaller enrollment</div></div>
+      </div>
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(224,82,82,0.06);border:1px solid rgba(224,82,82,0.2);font-size:11px;color:var(--dim);">
+        <b style="color:var(--red)">BD Action Needed:</b> Any asset beyond 1.5× median duration for its phase/TA warrants a red flag. Requires enrollment rate data, amendment history, and enrollment-adjusted timeline — none available in current platform.
+      </div>
+    </div>
+
+    <!-- Gap 2: rNPV -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--red)">② CRITICAL — rNPV Framework</span><span class="card-badge" style="color:var(--red);border-color:rgba(224,82,82,0.3)">Missing</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">Risk-adjusted NPV is the fundamental BD valuation methodology. Without it, deal comparables are just price history, not value benchmarks.</div>
+      <div class="grid g12 grid-gap">
+        <div style="background:var(--bg2);padding:14px;border:1px solid var(--border);">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em">rNPV Formula Components</div>
+          ${[['Peak Sales Estimate','From market sizing + competitive density — exists in platform'],['Success Probability (LoS)','Phase-specific LoS × TA benchmark — partially available'],['Development Cost','Phase II avg: $170M · Phase III avg: $460M (DiMasi 2023)'],['Time to Market','Phase velocity data — NOT in platform'],['Discount Rate','Typical 10-12% WACC for pharma BD — static input needed'],['Patent-Protected Revenue Years','Patent expiry data — exists in platform']].map(r=>`<div style="display:flex;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px;"><span style="color:${r[1].includes('exists')?'var(--green)':r[1].includes('partially')?'var(--gold)':'var(--red)'}">●</span><div><div style="color:var(--text)">${r[0]}</div><div style="color:var(--muted);font-size:10px">${r[1]}</div></div></div>`).join('')}
+        </div>
+        <div style="background:var(--bg2);padding:14px;border:1px solid var(--border);">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--gold);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.1em">Typical rNPV Range by Phase</div>
+          ${[['Phase I asset','$50M – $200M rNPV'],['Phase II (positive data)','$200M – $800M rNPV'],['Phase III (enrollment)','$500M – $2.5B rNPV'],['Phase III (data readout)','$1B – $6B rNPV'],['NDA Filed','$2B – $15B rNPV']].map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;"><span style="color:var(--dim)">${r[0]}</span><span style="font-family:var(--mono);color:var(--gold)">${r[1]}</span></div>`).join('')}
+          <div style="margin-top:10px;font-size:10px;color:var(--muted)">Source: BioPharma Dealmakers 2024; ranges vary by TA and indication</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gap 3: Failure Modes across TAs (data present) -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--gold)">③ MAJOR — Failure Mode Analysis Across TAs</span><span class="card-badge" style="color:var(--gold);border-color:rgba(201,168,76,0.3)">Partial</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">Failure mode drives the entire licensing strategy. Safety-failed assets are uninvestable. Efficacy-failed assets may be endpoint-redesignable. Commercial-failed assets may suit emerging markets. This cross-TA comparison is decision-critical.</div>
+      <div class="grid g14 grid-gap" id="gap-failure-grid"></div>
+      <div style="margin-top:12px;padding:10px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);font-size:11px;color:var(--dim);">
+        <b style="color:var(--gold)">BD Implication:</b> CNS has 58% efficacy failure rate — highest of all TAs. This makes CNS licensing decisions primarily about endpoint design quality, not just safety. Cardiovascular has the highest safety failure rate (28%) — AE burden in MACE populations is the critical due diligence lens.
+      </div>
+    </div>
+
+    <!-- Gap 4: Deal Velocity Trend -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--gold)">④ MAJOR — Deal Comparable Pricing Trend</span><span class="card-badge" style="color:var(--gold);border-color:rgba(201,168,76,0.3)">Partial</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">Deal values have inflated substantially. A 2019 Phase II comparable is not a valid 2025 benchmark. Temporal trend in upfront payments is essential for any BD negotiation anchor.</div>
+      <div class="grid g12 grid-gap">
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;">Average Phase II Licensing Upfront — 2019→2024 ($M)</div>
+          ${[['2019','$58M',29],['2020','$68M',34],['2021','$84M',42],['2022','$98M',49],['2023','$120M',60],['2024','$142M',71]].map(r=>`<div class="hbar-row"><div class="hbar-lbl" style="width:44px">${r[0]}</div><div class="hbar-track"><div class="hbar-fill" style="width:${r[2]}%;background:var(--gold)"></div></div><div class="hbar-val" style="color:var(--gold)">${r[1]}</div></div>`).join('')}
+        </div>
+        <div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:10px;">Average Phase III Acquisition Premium (EV/Peak Sales Multiple)</div>
+          ${[['Oncology','4.8×',100],['Rare Disease','6.2×',100],['CNS','3.9×',83],['Immunology','4.2×',88],['Metabolic','5.1×',82],['Cardiovascular','3.1×',65]].map(r=>`<div class="hbar-row"><div class="hbar-lbl" style="width:100px">${r[0]}</div><div class="hbar-track"><div class="hbar-fill" style="width:${r[2]}%;background:var(--purple)"></div></div><div class="hbar-val" style="color:var(--purple)">${r[1]}</div></div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Gap 5: Biosimilar threat -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--gold)">⑤ MAJOR — Biosimilar Pipeline Threat Analysis</span><span class="card-badge" style="color:var(--gold);border-color:rgba(201,168,76,0.3)">Partial</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">Patent cliff data alone is insufficient. The relevant question is: what is the biosimilar competition probability, how many competitors are in development, and what is the typical price erosion curve?</div>
+      <div class="grid g12 grid-gap">
+        <div>
+          ${[{drug:'Humira (adalimumab)',loe:2023,bios:10,erosion:'85%',col:'#e05252'},
+             {drug:'Eliquis (apixaban)',loe:2026,bios:6,erosion:'Est 70%',col:'#e05252'},
+             {drug:'Keytruda (pembrolizumab)',loe:2028,bios:3,erosion:'Est 40%',col:'#gold'},
+             {drug:'Dupixent (dupilumab)',loe:2031,bios:1,erosion:'Est 25%',col:'#3cc98a'}].map(d=>`
+            <div style="padding:10px;background:var(--bg2);border-bottom:1px solid var(--border);display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;">
+              <div style="font-size:11px;color:var(--text)">${d.drug}</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">LOE ${d.loe}</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--teal)">${d.bios} biosims</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--red)">${d.erosion} erosion</div>
+            </div>`).join('')}
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);padding:14px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--teal);margin-bottom:10px;text-transform:uppercase">Typical Biologic Price Erosion by Competitor Count</div>
+          ${[['1–2 biosimilars','15–30% erosion'],['3–5 biosimilars','40–60% erosion'],['6–8 biosimilars','60–80% erosion'],['9+ biosimilars (Humira)','80–90% erosion (US)']].map(r=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:11px;"><span style="color:var(--dim)">${r[0]}</span><span style="font-family:var(--mono);color:var(--red)">${r[1]}</span></div>`).join('')}
+          <div style="margin-top:10px;font-size:10px;color:var(--muted)">Source: IQVIA Biosimilar Intelligence 2024</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gap 6: Funding Signals -->
+    <div class="card" style="margin-bottom:12px;">
+      <div class="card-head"><span class="card-title" style="color:var(--teal)">⑥ MODERATE — Funding Signal Intelligence</span><span class="card-badge" style="color:var(--teal);border-color:rgba(0,198,190,0.3)">Not Present</span></div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:14px;">A target biotech's Series B close or strategic crossover investor entry is a 6–18 month BD window before valuations inflate. This layer is completely absent from the platform.</div>
+      <div class="grid g13 grid-gap">
+        ${[{signal:'Series A close',window:'24–36 mo BD window',note:'Asset at Ph I/pre-Ph I. Long lead time. Low valuation.',col:'var(--teal)'},
+           {signal:'Series B / Crossover',window:'12–18 mo BD window',note:'Typically at Ph II entry. Optimal licensing timing.',col:'var(--gold)'},
+           {signal:'IPO Filed',window:'6–12 mo BD window',note:'Valuation inflating rapidly. Acquire or license before public market premium.',col:'var(--purple)'},
+           ].map(s=>`<div style="background:var(--bg2);border:1px solid var(--border);border-top:2px solid ${s.col};padding:14px;"><div style="font-family:var(--mono);font-size:11px;color:${s.col};margin-bottom:6px">${s.signal}</div><div style="font-family:var(--mono);font-size:12px;color:var(--white);margin-bottom:6px">${s.window}</div><div style="font-size:11px;color:var(--dim)">${s.note}</div></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="gap-grid" style="margin-top:4px;">
+      <div class="gap-card"><span class="gap-type moderate">Moderate</span><div class="gap-num">7</div><div class="gap-title">Alliance Network Mapping</div><div class="gap-desc">Existing co-development agreements and licensing constraints define the negotiating landscape. Who has right-of-first-refusal? What change-of-control triggers exist? Not mapped.</div></div>
+      <div class="gap-card"><span class="gap-type moderate">Moderate</span><div class="gap-num">8</div><div class="gap-title">Trial Design Quality Benchmarking</div><div class="gap-desc">Is the Phase II endpoint selection competitive for this indication? Surrogate vs. clinical endpoint choice is the single biggest predictor of Phase III success. No benchmarking layer exists.</div></div>
+      <div class="gap-card"><span class="gap-type moderate">Moderate</span><div class="gap-num">9</div><div class="gap-title">Geographic BD Arbitrage</div><div class="gap-desc">High-quality, underfunded assets in India, China, and South Korea represent pre-valuation-inflation acquisition opportunities. The platform has emerging market data but no systematic BD radar scoring.</div></div>
+      <div class="gap-card"><span class="gap-type moderate">Moderate</span><div class="gap-num">10</div><div class="gap-title">Regulatory Premium Valuation Delta</div><div class="gap-desc">Breakthrough Therapy designation vs. standard review is a 40–60% NPV premium. PRIME, Fast Track, Orphan Drug should be filterable valuation modifiers, not just tags. Currently treated as metadata only.</div></div>
+    </div>
+  </div>
+
+</div><!-- /main -->
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="bottom-nav">
+  <div class="bn-item active" onclick="goPage('overview',this)" id="bn-overview">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+    Home
+  </div>
+  <div class="bn-item" onclick="goPage('pipeline',this)" id="bn-pipeline">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Pipeline
+  </div>
+  <div class="bn-item" onclick="goPage('molecules',this)" id="bn-molecules">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="5" r="2"/><circle cx="19" cy="9" r="2"/><circle cx="5" cy="9" r="2"/></svg>
+    Molecules
+  </div>
+  <div class="bn-item" onclick="goPage('sponsors',this)" id="bn-sponsors">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    Sponsors
+  </div>
+  <div class="bn-item" onclick="goPage('deals',this)" id="bn-deals">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/></svg>
+    Deals
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">Detail View</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════
+   DATA LAYER
+════════════════════════════════════ */
+const DATA = {
+  funnel:[
+    {phase:'Phase 0',n:4820,pct:100,col:'#4a9eff'},
+    {phase:'Phase I',n:38400,pct:95,col:'#4a9eff'},
+    {phase:'Phase I/II',n:18200,pct:78,col:'#00c6be'},
+    {phase:'Phase II',n:29200,pct:72,col:'#00c6be'},
+    {phase:'Phase II/III',n:8400,pct:48,col:'#c9a84c'},
+    {phase:'Phase III',n:14800,pct:36,col:'#c9a84c'},
+    {phase:'NDA/BLA Filed',n:3200,pct:14,col:'#9b6dff'},
+    {phase:'Approved',n:1840,pct:8,col:'#3cc98a'},
+  ],
+  status:[
+    {label:'Recruiting',val:38.2,col:'#3cc98a'},
+    {label:'Active/Not Rec.',val:22.4,col:'#00c6be'},
+    {label:'Completed',val:24.8,col:'#c9a84c'},
+    {label:'Terminated',val:7.5,col:'#e05252'},
+    {label:'Suspended',val:4.1,col:'#9b6dff'},
+    {label:'Withdrawn',val:3.0,col:'#5a7a9a'},
+  ],
+  prob:[
+    {label:'Ph I → Ph II',pct:63},{label:'Ph II → Ph III',pct:31},
+    {label:'Ph III → NDA',pct:58},{label:'NDA → Approval',pct:85},
+    {label:'Ph I → Approval',pct:10},
+  ],
+  trend:[18200,21400,24800,28600,31200,36800,42000,48200,44600,52400,58800],
+  trendYears:['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025'],
+  ov_trend:[310,340,368,410,445,395,468,512,498,544,580],
+  ov_trendYears:['2020','2021','2022','2023','2024(v)'],
+  indications:[
+    {label:'Solid Tumors',val:8420,pct:100,col:'#e05252',ta:'Oncology'},
+    {label:'Hematologic Malignancy',val:4820,pct:57,col:'#e05252',ta:'Oncology'},
+    {label:'Type 2 Diabetes',val:3840,pct:46,col:'#4a9eff',ta:'Metabolic'},
+    {label:"Alzheimer's Disease",val:3210,pct:38,col:'#9b6dff',ta:'CNS'},
+    {label:'Rheumatoid Arthritis',val:2980,pct:35,col:'#00c6be',ta:'Immunology'},
+    {label:'NASH / MASH',val:2640,pct:31,col:'#4a9eff',ta:'Metabolic'},
+    {label:'COVID-19 / Respiratory',val:2410,pct:29,col:'#3cc98a',ta:'Infect.'},
+    {label:'Multiple Sclerosis',val:2180,pct:26,col:'#9b6dff',ta:'CNS'},
+    {label:'Heart Failure',val:1980,pct:24,col:'#4a9eff',ta:'Cardio'},
+    {label:'Schizophrenia / SUD',val:1740,pct:21,col:'#9b6dff',ta:'CNS'},
+    {label:'Atopic Dermatitis',val:1620,pct:19,col:'#00c6be',ta:'Immunology'},
+    {label:'NSCLC',val:1580,pct:19,col:'#e05252',ta:'Oncology'},
+    {label:'AML / MDS',val:1420,pct:17,col:'#e05252',ta:'Oncology'},
+    {label:'Rare Metabolic',val:1280,pct:15,col:'#c9a84c',ta:'Rare'},
+    {label:'Parkinson\'s Disease',val:1140,pct:14,col:'#9b6dff',ta:'CNS'},
+  ],
+  geo:[
+    {label:'North America',val:42,pct:100,col:'#4a9eff'},
+    {label:'Europe (EU+UK)',val:28,pct:67,col:'#00c6be'},
+    {label:'Asia Pacific',val:18,pct:43,col:'#c9a84c'},
+    {label:'China',val:8,pct:19,col:'#9b6dff'},
+    {label:'India',val:5,pct:12,col:'#3cc98a'},
+    {label:'Latin America',val:4,pct:10,col:'#e05252'},
+    {label:'Rest of World',val:3,pct:7,col:'#5a7a9a'},
+  ],
+  molecules:[
+    {name:'Sotorasib',phase:'ph3',ta:'Oncology',indication:'NSCLC (KRAS G12C)',sponsor:'Amgen',moa:'KRAS Inhibitor',safety:'Low',patent:2031,bdos:78,bd:'Partnered',reg:'BT/ODD',upfront:'$150M',milestones:'$2.1B',royalty:'12%'},
+    {name:'Lecanemab',phase:'ph4',ta:'CNS',indication:"Early Alzheimer's",sponsor:'Eisai/Biogen',moa:'Anti-Aβ mAb',safety:'Medium',patent:2033,bdos:71,bd:'Partnered',reg:'BT/Fast Track',upfront:'$1.3B',milestones:'N/A',royalty:'N/A'},
+    {name:'Tirzepatide',phase:'ph4',ta:'Metabolic',indication:'T2D / Obesity',sponsor:'Eli Lilly',moa:'GIP/GLP-1 RA',safety:'Low',patent:2036,bdos:65,bd:'Proprietary',reg:'BT',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Tezepelumab',phase:'ph4',ta:'Respiratory',indication:'Severe Asthma',sponsor:'AZ/Amgen',moa:'Anti-TSLP mAb',safety:'Low',patent:2032,bdos:68,bd:'Partnered',reg:'BT',upfront:'$550M',milestones:'$750M',royalty:'N/A'},
+    {name:'Olutasidenib',phase:'ph2',ta:'Oncology',indication:'AML (IDH1 mut.)',sponsor:'Novo Nordisk (ex-Forma Tx)',moa:'IDH1 Inhibitor',safety:'Medium',patent:2034,bdos:84,bd:'Proprietary',reg:'ODD/Fast Track',upfront:'Acq $1.1B (2023)',milestones:'N/A',royalty:'N/A'},
+    {name:'Pelabresib',phase:'ph3',ta:'Oncology',indication:'Myelofibrosis',sponsor:'Novartis (ex-MorphoSys)',moa:'BET Inhibitor',safety:'Medium',patent:2035,bdos:81,bd:'Proprietary',reg:'ODD',upfront:'Acq $2.9B (2024)',milestones:'N/A',royalty:'N/A'},
+    {name:'Remibrutinib',phase:'ph2',ta:'Immunology',indication:'CLL / Autoimmune',sponsor:'Novartis',moa:'BTK Inhibitor',safety:'Low',patent:2036,bdos:72,bd:'Proprietary',reg:'–',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Efimosfermin',phase:'ph2',ta:'Metabolic',indication:'NASH / MASH',sponsor:'89bio',moa:'FGF21 Analogue',safety:'Low',patent:2035,bdos:88,bd:'Available',reg:'Fast Track',upfront:'Est $120M',milestones:'Est $1.8B',royalty:'8-14%'},
+    {name:'Sabutoclax',phase:'ph1',ta:'Oncology',indication:'Solid Tumors',sponsor:'Ascenta Tx',moa:'Pan-Bcl-2 Inhib.',safety:'High',patent:2030,bdos:62,bd:'Available',reg:'–',upfront:'Est $40M',milestones:'Est $800M',royalty:'8-12%'},
+    {name:'Imetelstat',phase:'ph3',ta:'Oncology',indication:'MDS / MF',sponsor:'Geron Corp',moa:'Telomerase Inhib.',safety:'Medium',patent:2034,bdos:86,bd:'Available',reg:'ODD/Fast Track',upfront:'Est $300M',milestones:'Est $2.8B',royalty:'12-18%'},
+    {name:'Fostamatinib',phase:'ph2',ta:'Immunology',indication:'ITP / Autoimmune',sponsor:'Rigel Pharma',moa:'SYK Inhibitor',safety:'Medium',patent:2031,bdos:74,bd:'Available',reg:'ODD',upfront:'Est $90M',milestones:'Est $1.1B',royalty:'10-15%'},
+    {name:'Olpasiran',phase:'ph3',ta:'Cardiology',indication:'ASCVD (Lp(a)↑)',sponsor:'Amgen',moa:'siRNA (Lp(a))',safety:'Low',patent:2037,bdos:79,bd:'Proprietary',reg:'BT/Fast Track',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Zilebesiran',phase:'ph3',ta:'Cardiology',indication:'Hypertension',sponsor:'Alnylam/Roche',moa:'siRNA (AGT)',safety:'Low',patent:2038,bdos:77,bd:'Partnered',reg:'Fast Track',upfront:'$310M',milestones:'$1.6B',royalty:'N/A'},
+    {name:'Zanubrutinib',phase:'ph4',ta:'Oncology',indication:'B-cell Malignancies',sponsor:'BeiGene',moa:'BTK Inhibitor',safety:'Low',patent:2033,bdos:82,bd:'Partnered',reg:'BT',upfront:'$2.9B (Novartis)',milestones:'N/A',royalty:'N/A'},
+    {name:'Volrustomig',phase:'ph2',ta:'Oncology',indication:'Solid Tumors (combo)',sponsor:'AstraZeneca',moa:'PD-1/CTLA-4 bsAb',safety:'Medium',patent:2038,bdos:76,bd:'Proprietary',reg:'BT',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Ianalumab',phase:'ph3',ta:'Immunology',indication:'Sjögren\'s / SLE',sponsor:'Novartis',moa:'Anti-BAFF-R mAb',safety:'Low',patent:2037,bdos:80,bd:'Proprietary',reg:'BT',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Elranatamab',phase:'ph2',ta:'Oncology',indication:'Multiple Myeloma',sponsor:'Pfizer',moa:'BCMA×CD3 BiTE',safety:'Medium',patent:2036,bdos:83,bd:'Proprietary',reg:'ODD/BT',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'Inavolisib',phase:'ph3',ta:'Oncology',indication:'HR+ Breast Cancer',sponsor:'Roche',moa:'PI3Kα Inhibitor',safety:'Medium',patent:2035,bdos:85,bd:'Proprietary',reg:'BT',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+    {name:'KarXT',phase:'ph4',ta:'CNS',indication:'Schizophrenia',sponsor:'Karuna Tx (BMS)',moa:'M1/M4 agonist',safety:'Low',patent:2040,bdos:91,bd:'Acquired',reg:'BT',upfront:'$14B (M&A)',milestones:'N/A',royalty:'N/A'},
+    {name:'Nipocalimab',phase:'ph3',ta:'Immunology',indication:'Myasthenia Gravis',sponsor:'J&J',moa:'FcRn Antagonist',safety:'Low',patent:2038,bdos:78,bd:'Proprietary',reg:'BT/ODD',upfront:'N/A',milestones:'N/A',royalty:'N/A'},
+  ],
+  patents:[
+    {drug:'Eliquis (apixaban)',expiry:2026,rev:18.2,col:'#e05252'},
+    {drug:'Keytruda (pembrolizumab)',expiry:2028,rev:21.0,col:'#9b6dff'},
+    {drug:'Jardiance (empagliflozin)',expiry:2027,rev:10.4,col:'#4a9eff'},
+    {drug:'Dupixent (dupilumab)',expiry:2031,rev:11.6,col:'#00c6be'},
+    {drug:'Ozempic/Wegovy (semaglutide)',expiry:2032,rev:13.9,col:'#c9a84c'},
+    {drug:'Xarelto (rivaroxaban)',expiry:2026,rev:6.2,col:'#e05252'},
+    {drug:'Eylea (aflibercept)',expiry:2027,rev:8.7,col:'#3cc98a'},
+    {drug:'Skyrizi (risankizumab)',expiry:2033,rev:7.4,col:'#9b6dff'},
+  ],
+  moa:[
+    {label:'Monoclonal Antibodies',val:6840,pct:100,col:'#00c6be'},
+    {label:'Small Molecule Kinase',val:5420,pct:79,col:'#4a9eff'},
+    {label:'Bi-specific Antibodies',val:3210,pct:47,col:'#9b6dff'},
+    {label:'CAR-T / Cell Therapy',val:2840,pct:42,col:'#c9a84c'},
+    {label:'ADC (Antibody-Drug Conj.)',val:2180,pct:32,col:'#e05252'},
+    {label:'siRNA / Oligonucleotide',val:1940,pct:28,col:'#3cc98a'},
+    {label:'Gene Therapy',val:1620,pct:24,col:'#4a9eff'},
+    {label:'PROTAC / Degraders',val:1240,pct:18,col:'#c9a84c'},
+  ],
+  sponsors:[
+    {name:'Roche / Genentech',n:412,bdos:94,region:'Europe',size:'big',revenue:'$58.7B',phase3:142,revNote:'FY2024 actual (CHF-adj)',acq:'Spark Tx 2019 ($4.3B)'},
+    {name:'Novartis',n:387,bdos:91,region:'Europe',size:'big',revenue:'$45.7B',phase3:128,revNote:'FY2024 actual net sales',acq:'MorphoSys 2024 ($2.9B)'},
+    {name:'Johnson & Johnson',n:364,bdos:89,region:'USA',size:'big',revenue:'$56.3B',phase3:118,revNote:'FY2024 pharma segment',acq:'Abiomed 2022 ($16.6B)'},
+    {name:'AstraZeneca',n:341,bdos:88,region:'Europe',size:'big',revenue:'$54.1B',phase3:112,revNote:'FY2024 actual',acq:'Alexion 2021 ($39B)'},
+    {name:'Pfizer',n:318,bdos:86,region:'USA',size:'big',revenue:'$58.5B',phase3:96,revNote:'FY2024 (post-COVID decline)',acq:'Seagen 2023 ($43B)'},
+    {name:'Bristol Myers Squibb',n:295,bdos:84,region:'USA',size:'big',revenue:'$47.2B',phase3:88,revNote:'FY2024 actual',acq:'Karuna 2024 ($14B)'},
+    {name:'Merck & Co.',n:277,bdos:83,region:'USA',size:'big',revenue:'$63.6B',phase3:82,revNote:'FY2024 actual (Keytruda-driven)',acq:'Prometheus Bio 2023 ($10.8B)'},
+    {name:'Eli Lilly',n:261,bdos:80,region:'USA',size:'big',revenue:'$45.0B',phase3:78,revNote:'FY2024 actual (Mounjaro/Zepbound surge)',acq:'Morphic Tx 2024 ($3.2B)'},
+    {name:'BeiGene',n:198,bdos:76,region:'Emerging',size:'mid',revenue:'$3.2B',phase3:62,acq:'–'},
+    {name:'Agenus Inc.',n:48,bdos:88,region:'USA',size:'small',revenue:'$0.2B',phase3:8,acq:'BD Target'},
+    {name:'Blueprint Medicines',n:62,bdos:85,region:'USA',size:'small',revenue:'$0.5B',phase3:14,acq:'BD Target'},
+    {name:'Protagonist Tx',n:38,bdos:72,region:'USA',size:'small',revenue:'$0.1B',phase3:6,acq:'BD Target'},
+    {name:'Imago BioSciences',n:22,bdos:82,region:'USA',size:'small',revenue:'$0.05B',phase3:4,acq:'Acq by MSD $1.35B'},
+  ],
+  deals:[
+    {asset:'Zavegepant (Pfizer)',phase:'Phase III',ta:'CNS',type:'Licensing',year:2024,upfront:'$500M',total:'$2.6B',royalty:'10-15%',acquirer:'Pfizer',target:'Biohaven'},
+    {asset:'KarXT (BMS)',phase:'Phase III',ta:'CNS',type:'Acquisition',year:2024,upfront:'$14B',total:'$14B',royalty:'N/A',acquirer:'Bristol Myers Squibb',target:'Karuna Tx'},
+    {asset:'Seagen ADC Portfolio',phase:'Approved',ta:'Oncology',type:'Acquisition',year:2023,upfront:'$43B',total:'$43B',royalty:'N/A',acquirer:'Pfizer',target:'Seagen'},
+    {asset:'Prometheus IBD (PRA023)',phase:'Phase II',ta:'Immunology',type:'Acquisition',year:2023,upfront:'$10.8B',total:'$10.8B',royalty:'N/A',acquirer:'Merck & Co.',target:'Prometheus Bio'},
+    {asset:'GLP-1 Platform (mAb)',phase:'Phase I',ta:'Metabolic',type:'Licensing',year:2023,upfront:'$85M',total:'$1.7B',royalty:'8-12%',acquirer:'Undisclosed',target:'Zealand Pharma'},
+    {asset:'Ionis-AZ Cardio siRNA',phase:'Phase II',ta:'Cardiology',type:'Co-Dev',year:2023,upfront:'$310M',total:'$1.6B',royalty:'N/A',acquirer:'AstraZeneca',target:'Alnylam'},
+    {asset:'Morphic αvβ6/αvβ1 inhib',phase:'Phase II',ta:'Metabolic',type:'Acquisition',year:2024,upfront:'$3.2B',total:'$3.2B',royalty:'N/A',acquirer:'Eli Lilly',target:'Morphic Tx'},
+    {asset:'FLJ-001 (CD19 x CD3)',phase:'Phase I',ta:'Oncology',type:'Licensing',year:2022,upfront:'$40M',total:'$900M',royalty:'12-18%',acquirer:'Undisclosed',target:'Emerging Biotech'},
+    {asset:'Cobenfy (xanomeline)',phase:'Phase III',ta:'CNS',type:'Licensing',year:2022,upfront:'$325M',total:'$1.9B',royalty:'Tiered',acquirer:'Pfizer',target:'Karuna Tx'},
+    {asset:'ADC novel payload Ph2',phase:'Phase II',ta:'Oncology',type:'Licensing',year:2024,upfront:'$200M',total:'$3.1B',royalty:'10-16%',acquirer:'AstraZeneca',target:'Fusion Pharma'},
+  ],
+  taData:{
+    // los = Likelihood of Approval (Phase I→Approval LoS%). Market = 2024 actual $B. mkt30 = 2030 projection $B
+    oncology:{trials:128400,market:225,mkt30:324,growth:11.2,los:5.1,failures:{safety:22,efficacy:52,commercial:16,regulatory:10}},
+    cns:{trials:62800,market:130,mkt30:198,growth:9.4,los:7.9,failures:{safety:18,efficacy:58,commercial:14,regulatory:10}},
+    cardio:{trials:48200,market:88,mkt30:124,growth:6.1,los:6.7,failures:{safety:28,efficacy:42,commercial:18,regulatory:12}},
+    immuno:{trials:44600,market:102,mkt30:148,growth:13.8,los:19.1,failures:{safety:24,efficacy:44,commercial:20,regulatory:12}},
+    rare:{trials:38900,market:72,mkt30:105,growth:18.4,los:9.8,failures:{safety:16,efficacy:48,commercial:28,regulatory:8}},
+    infect:{trials:31200,market:58,mkt30:72,growth:4.2,los:19.3,failures:{safety:26,efficacy:38,commercial:24,regulatory:12}},
+    metabolic:{trials:29800,market:82,mkt30:118,growth:14.1,los:11.2,failures:{safety:20,efficacy:46,commercial:22,regulatory:12}},
+    resp:{trials:22400,market:48,mkt30:68,growth:7.8,los:13.4,failures:{safety:24,efficacy:44,commercial:20,regulatory:12}},
+    all:{trials:504221,market:1480,mkt30:2100,growth:8.2,los:9.6,failures:{safety:22,efficacy:48,commercial:20,regulatory:10}},
+  },
+  taGrowth:[
+    {label:'Rare / Orphan',val:18.4,pct:100,col:'#c9a84c'},
+    {label:'Metabolic',val:14.1,pct:77,col:'#4a9eff'},
+    {label:'Immunology',val:13.8,pct:75,col:'#00c6be'},
+    {label:'Oncology',val:11.2,pct:61,col:'#e05252'},
+    {label:'CNS / Neurology',val:9.4,pct:51,col:'#9b6dff'},
+    {label:'Respiratory',val:7.8,pct:42,col:'#3cc98a'},
+    {label:'Cardiovascular',val:6.1,pct:33,col:'#4a9eff'},
+    {label:'Infectious Disease',val:4.2,pct:23,col:'#3cc98a'},
+  ],
+  // Phase I → Approval Likelihood of Success (LoS%) — industry benchmark by TA
+  taLoS:[
+    {label:'Infect. Disease',val:19.3,pct:100,col:'#3cc98a',note:'Highest LoS — well-defined endpoints'},
+    {label:'Immunology',val:19.1,pct:99,col:'#00c6be',note:'High LoS for targeted biologics'},
+    {label:'Metabolic / Endocrine',val:11.2,pct:58,col:'#4a9eff',note:'NASH adds drag (0% LoS to date)'},
+    {label:'Rare / Orphan',val:9.8,pct:51,col:'#c9a84c',note:'ODD benefit; small trials'},
+    {label:'CNS / Neurology',val:7.9,pct:41,col:'#9b6dff',note:'Endpoint complexity, brain penetration'},
+    {label:'Cardiovascular',val:6.7,pct:35,col:'#4a9eff',note:'Long MACE endpoints, safety burden'},
+    {label:'Oncology (all)',val:5.1,pct:26,col:'#e05252',note:'Heterogeneity; solid tumors ~4%'},
+  ],
+  whitespace:[
+    {label:'ALS / Motor Neuron',ws:92,market:4.2,density:0.12,col:'#e05252'},
+    {label:'Rare Metabolic (IEM)',ws:88,market:6.8,density:0.18,col:'#c9a84c'},
+    {label:'Progressive MS',ws:85,market:8.4,density:0.21,col:'#9b6dff'},
+    {label:'NASH (pediatric)',ws:82,market:3.8,density:0.19,col:'#4a9eff'},
+    {label:'Chronic Kidney Disease',ws:80,market:12.1,density:0.24,col:'#00c6be'},
+    {label:'Pulmonary Hypertension',ws:78,market:5.6,density:0.22,col:'#3cc98a'},
+    {label:'GvHD (chronic)',ws:74,market:3.2,density:0.28,col:'#c9a84c'},
+    {label:'Lupus Nephritis',ws:72,market:4.8,density:0.26,col:'#9b6dff'},
+  ],
+  gaps:[
+    {type:'critical',title:'Deal Velocity / Phase Timing',desc:'No time-in-phase tracking. An asset stuck in Phase II for 4 years vs. 18 months has fundamentally different capital efficiency and risk profiles. Phase velocity is prerequisite for rNPV.'},
+    {type:'critical',title:'rNPV Calculator',desc:'Risk-adjusted NPV modeling — development cost × success probability × market size × time-to-market — is missing entirely. BD analysts cannot evaluate a deal without this framework.'},
+    {type:'critical',title:'Deal Comparables Database',desc:'When structuring a Phase II licensing deal, I need comparable upfronts, milestone caps, royalty ranges by TA and modality. The current deal list is illustrative, not analytically queryable.'},
+    {type:'major',title:'Competitive Density Index',desc:'Trials-per-$B-market-size, sorted by whitespace, is the fundamental landscape analysis. The current platform shows absolute counts — a VC needs relative density to find the uncrowded spaces.'},
+    {type:'major',title:'Failure Mode Analysis',desc:'Why assets fail — safety vs. efficacy vs. commercial vs. regulatory — drives licensing strategy completely differently. A safety-failed asset is uninvestable; an endpoint-design failure may be restructurable.'},
+    {type:'major',title:'Funding Signal Intelligence',desc:'A target biotech\'s Series B close or strategic investor entry is a BD timing signal. Without a financing layer, you miss the optimal acquisition window before valuations inflate.'},
+    {type:'major',title:'Biosimilar / Generic Threat',desc:'Patent cliff data without biosimilar pipeline probability is incomplete. For each LOE event, what is the probability, timing, and competitive intensity of biosimilar market entry?'},
+    {type:'moderate',title:'Alliance Network Mapping',desc:'Who co-develops with whom, existing licensing constraints, and CRO relationships define the negotiating landscape before any approach. Competitive moat analysis is absent.'},
+    {type:'moderate',title:'Trial Design Benchmarking',desc:'Is a Phase II endpoint selection competitive vs. peers in this indication? Trial design quality predicts Phase III success. This requires endpoint and control arm benchmarking data.'},
+    {type:'moderate',title:'Geographic Arbitrage Intelligence',desc:'High-quality, underfunded assets in India, China, and South Korea represent acquisition opportunities before they attract Western BD attention and valuations inflate.'},
+  ],
+  regPremium:[
+    {label:'Breakthrough Therapy (BT)',val:38,pct:100,col:'#c9a84c'},
+    {label:'Fast Track (FT)',val:62,pct:100,col:'#4a9eff'},
+    {label:'Orphan Drug (ODD)',val:28,pct:74,col:'#9b6dff'},
+    {label:'Priority Review',val:18,pct:47,col:'#3cc98a'},
+    {label:'PRIME (EMA)',val:12,pct:32,col:'#00c6be'},
+    {label:'Accelerated Approval',val:9,pct:24,col:'#e05252'},
+  ],
+};
+
+/* ════════════════════════════════════
+   SUPABASE LIVE DATA CONFIG
+════════════════════════════════════ */
+const SUPABASE_URL = 'https://dftquoyxsvfsujeqhxdj.supabase.co';
+// Use anon/public key from Supabase Dashboard → Settings → API → anon public
+// Service role key used here for demo — replace with anon key for production
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRmdHF1b3l4c3Zmc3VqZXFoeGRqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NDQ0NTYyNywiZXhwIjoyMDkwMDIxNjI3fQ.0l6dIuoCSGzvPujwKgQxy9HzKR4KOJM8jv9w6Gk7urE';
+
+const DB_STATUS = { live: false, source: 'static', loadedAt: null };
+
+async function loadLiveData() {
+  const headers = {
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`,
+    'Content-Type': 'application/json'
+  };
+  try {
+    const [molRes, spRes, dealRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/cliniq_molecules?select=*&order=bdos.desc`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/cliniq_sponsors?select=*&order=bdos.desc`, { headers }),
+      fetch(`${SUPABASE_URL}/rest/v1/cliniq_deals?select=*&order=year.desc`, { headers }),
+    ]);
+    let liveCount = 0;
+    if (molRes.ok) {
+      const mols = await molRes.json();
+      if (Array.isArray(mols) && mols.length > 0) {
+        DATA.molecules = mols;
+        liveCount++;
+      }
+    }
+    if (spRes.ok) {
+      const sponsors = await spRes.json();
+      if (Array.isArray(sponsors) && sponsors.length > 0) {
+        DATA.sponsors = sponsors.map(s => ({
+          name: s.name, n: s.trial_count, bdos: s.bdos,
+          region: s.region, size: s.size, revenue: s.revenue,
+          phase3: s.phase3_count, revNote: s.rev_note, acq: s.recent_acq
+        }));
+        liveCount++;
+      }
+    }
+    if (dealRes.ok) {
+      const deals = await dealRes.json();
+      if (Array.isArray(deals) && deals.length > 0) {
+        DATA.deals = deals.map(d => ({
+          asset: d.asset, phase: d.phase, ta: d.ta,
+          type: d.deal_type, year: d.year, upfront: d.upfront,
+          total: d.total_value, royalty: d.royalty,
+          acquirer: d.acquirer, target: d.target
+        }));
+        liveCount++;
+      }
+    }
+    if (liveCount > 0) {
+      DB_STATUS.live = true;
+      DB_STATUS.source = 'supabase';
+      DB_STATUS.loadedAt = new Date().toLocaleTimeString();
+      updateDbStatusBadge(true);
+      console.log(`[ClinIQ] Live data loaded from Supabase ✓ (${liveCount}/3 tables)`);
+    }
+  } catch (e) {
+    console.warn('[ClinIQ] Supabase unavailable, using static data:', e.message);
+    updateDbStatusBadge(false);
+  }
+}
+
+function updateDbStatusBadge(live) {
+  const el = document.getElementById('db-status-badge');
+  if (!el) return;
+  el.textContent = live ? `● LIVE  ${DB_STATUS.loadedAt}` : '○ STATIC DATA';
+  el.style.color = live ? 'var(--teal)' : 'var(--dim)';
+}
+
+let molSortKey='bdos', molSortDir=-1, molCurrentPage=0, molPageSize=10;
+let filteredMols = [];
+
+/* ════════════════════════════════════
+   NAVIGATION
+════════════════════════════════════ */
+const PAGE_META = {
+  overview:  {title:'Overview',     crumb:'/ Platform Summary'},
+  pipeline:  {title:'Pipeline',     crumb:'/ Global Trial Analytics'},
+  molecules: {title:'Molecules',    crumb:'/ Drug Intelligence Browser'},
+  sponsors:  {title:'Sponsors',     crumb:'/ BD & Company Analysis'},
+  therapeutic:{title:'Therapeutic', crumb:'/ Market & TA Intelligence'},
+  deals:     {title:'Deal Comps',   crumb:'/ Licensing & M&A Comparables'},
+  whitespace:{title:'Whitespace',   crumb:'/ Indication Opportunity Map'},
+  sources:   {title:'Sources',      crumb:'/ Data Architecture'},
+  gaps:      {title:'VC Gap Analysis',crumb:'/ Platform Critique'},
+};
+
+function goPage(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.bn-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if (el) {
+    el.classList.add('active');
+    // sync bottom nav
+    const bn = document.getElementById('bn-'+id);
+    if (bn) bn.classList.add('active');
+  }
+  const meta = PAGE_META[id] || {title:id,crumb:''};
+  document.getElementById('topTitle').textContent = meta.title;
+  document.getElementById('topCrumb').textContent = meta.crumb;
+  closeSidebar();
+  // lazy render
+  const renders = {
+    pipeline:()=>{renderPipeline();},
+    molecules:()=>{renderMolTable();renderMolCharts();},
+    sponsors:()=>{renderSponsors();},
+    therapeutic:()=>{renderTA();},
+    deals:()=>{renderDeals();},
+    whitespace:()=>{renderWhitespace();},
+    sources:()=>{renderSources();},
+    gaps:()=>{renderGaps();},
+  };
+  if (renders[id]) renders[id]();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+/* ════════════════════════════════════
+   MODAL
+════════════════════════════════════ */
+function openModal(title, html) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(e) {
+  if (!e || e.target === document.getElementById('modal')) {
+    document.getElementById('modal').classList.remove('open');
+  }
+}
+
+/* ════════════════════════════════════
+   SVG CHARTS
+════════════════════════════════════ */
+function renderLineSVG(svgEl, data, W, H, color, years) {
+  const pad={t:18,b:years?28:10,l:46,r:10};
+  const dw=W-pad.l-pad.r, dh=H-pad.t-pad.b;
+  const min=Math.min(...data), max=Math.max(...data);
+  const range=max-min||1;
+  const minV=min-range*0.08, maxV=max+range*0.08;
+  // y-axis ticks: 4 levels
+  const ticks=4;
+  const gridLines=Array.from({length:ticks+1},(_,i)=>{
+    const v=minV+(maxV-minV)*(i/ticks);
+    const y=pad.t+(1-(v-minV)/(maxV-minV))*dh;
+    const lbl=v>=1000?(v/1000).toFixed(1)+'K':v>=1?(v).toFixed(0):v.toFixed(1);
+    return `<line x1="${pad.l}" y1="${y.toFixed(1)}" x2="${W-pad.r}" y2="${y.toFixed(1)}" stroke="#1a2e4a" stroke-width="1"/>
+      <text x="${pad.l-5}" y="${(y+3.5).toFixed(1)}" text-anchor="end" fill="#2e4560" font-family="IBM Plex Mono" font-size="9">${lbl}</text>`;
+  }).join('');
+  const pts=data.map((v,i)=>[pad.l+(i/(data.length-1))*dw, pad.t+(1-(v-minV)/(maxV-minV))*dh]);
+  const path=pts.map((p,i)=>`${i?'L':'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join(' ');
+  const area=path+` L${pts[pts.length-1][0]},${H-pad.b} L${pts[0][0]},${H-pad.b} Z`;
+  const id='g'+Math.random().toString(36).substr(2,6);
+  const ylbls=years?years.map((y,i)=>{
+    const x=pad.l+(i/(data.length-1))*dw;
+    return `<text x="${x.toFixed(1)}" y="${H-5}" text-anchor="middle" fill="#2e4560" font-family="IBM Plex Mono" font-size="9">${y}</text>`;
+  }).join(''):'';
+  svgEl.innerHTML=`<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.18"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+    ${gridLines}
+    <path d="${area}" fill="url(#${id})"/>
+    <path d="${path}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round"/>
+    ${pts.filter((_,i)=>i%Math.ceil(data.length/8)===0).map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.5" fill="${color}"/>`).join('')}
+    ${ylbls}`;
+}
+
+function renderDonut(svgEl, legEl, data) {
+  const cx=55,cy=55,r=38,sw=16,circ=2*Math.PI*r;
+  let cum=0;
+  const paths=data.map(d=>{
+    const len=(d.val/100)*circ;
+    const rot=(cum/100)*360;
+    cum+=d.val;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.col}" stroke-width="${sw}" stroke-dasharray="${len.toFixed(2)} ${(circ-len).toFixed(2)}" transform="rotate(${(rot-90).toFixed(1)} ${cx} ${cy})" opacity="0.85"/>`;
+  }).join('');
+  svgEl.innerHTML=paths+`<text x="${cx}" y="${cy+4}" text-anchor="middle" fill="#b8cde0" font-family="IBM Plex Mono" font-size="11" font-weight="600">Status</text>`;
+  if(legEl) legEl.innerHTML=data.map(d=>`<div class="lg-row"><div class="lg-dot" style="background:${d.col}"></div><span class="lg-lbl">${d.label}</span><span class="lg-pct">${d.val}%</span></div>`).join('');
+}
+
+function renderHBar(el, data, lblWidth) {
+  const lw=lblWidth||'140px';
+  el.innerHTML=data.map(d=>`
+    <div class="hbar-row" onclick="barDrillDown('${d.label}')">
+      <div class="hbar-lbl" style="width:${lw}">${d.label}</div>
+      <div class="hbar-track"><div class="hbar-fill" data-pct="${d.pct}" style="width:0%;background:${d.col}"></div></div>
+      <div class="hbar-val">${typeof d.val==='number'&&d.val>999?d.val.toLocaleString():d.val}</div>
+    </div>`).join('');
+  setTimeout(()=>{ el.querySelectorAll('.hbar-fill').forEach(b=>{ b.style.width=b.dataset.pct+'%'; }); },200);
+}
+
+function renderFunnel(el, data, clickable) {
+  el.innerHTML=data.map(d=>`
+    <div class="funnel-row" ${clickable?`onclick="funnelDrill('${d.phase}',${d.n})"`:''}">
+      <div class="funnel-label">${d.phase}</div>
+      <div class="funnel-outer"><div class="funnel-fill" data-pct="${d.pct}" style="width:0%;background:${d.col};"><span>${d.n.toLocaleString()}</span></div></div>
+      <div class="funnel-n">${d.n.toLocaleString()}</div>
+      <div class="funnel-pct">${d.pct}%</div>
+    </div>`).join('');
+  setTimeout(()=>{ el.querySelectorAll('.funnel-fill').forEach(b=>{ b.style.width=b.dataset.pct+'%'; }); },200);
+}
+
+function renderProb(el, data) {
+  el.innerHTML=`<div class="prob-list">`+data.map(d=>`
+    <div class="prob-row">
+      <div class="prob-lbl">${d.label}</div>
+      <div class="prob-track"><div class="prob-fill" data-pct="${d.pct}" style="width:0%"></div></div>
+      <div class="prob-val">${d.pct}%</div>
+    </div>`).join('')+`</div>`;
+  setTimeout(()=>{ el.querySelectorAll('.prob-fill').forEach(b=>{ b.style.width=b.dataset.pct+'%'; }); },200);
+}
+
+/* ════════════════════════════════════
+   OVERVIEW PAGE
+════════════════════════════════════ */
+(function initOverview(){
+  const svg=document.getElementById('ov-trend');
+  if(svg) renderLineSVG(svg,DATA.ov_trend,600,160,'#00c6be',DATA.ov_trendYears);
+  renderFunnel(document.getElementById('ov-funnel'),DATA.funnel,false);
+  renderDonut(document.getElementById('ov-donut'),document.getElementById('ov-donut-leg'),DATA.status);
+  renderProb(document.getElementById('ov-prob'),DATA.prob);
+  const alerts=document.getElementById('ov-alerts');
+  if(alerts) alerts.innerHTML=[
+    {type:'',label:'BDOS 91 — Pipeline Target',text:'Blueprint Medicines — Ph II NSCLC asset, Fast Track, patent 2036, estimated $250M upfront comparable.',val:'BDOS 88 · Available'},
+    {type:'warn',label:'Patent Cliff Alert',text:'Eliquis LOE 2026 — $18.2B revenue at risk. Biosimilar competition highly probable. BD window: now.',val:'$18.2B · LOE 2026'},
+    {type:'alert',label:'Competitive Density Gap',text:'ALS/Motor Neuron Disease: 47 indications with WS score >80. High unmet need, low competitive density.',val:'WS Score 92 · 12% density'},
+  ].map(a=>`<div class="insight-card ${a.type}"><div class="insight-label">${a.label}</div><div class="insight-text">${a.text}</div><div class="insight-val ${a.type}">${a.val}</div></div>`).join('');
+})();
+
+/* ════════════════════════════════════
+   PIPELINE PAGE
+════════════════════════════════════ */
+function renderPipeline() {
+  const ta=document.getElementById('pip-ta')?.value||'all';
+  renderFunnel(document.getElementById('pip-funnel'),DATA.funnel,true);
+  document.getElementById('pip-funnel-badge').textContent=ta==='all'?'All TAs':ta;
+  renderProb(document.getElementById('pip-prob'),DATA.prob);
+  const trendSvg=document.getElementById('pip-trend');
+  if(trendSvg) renderLineSVG(trendSvg,DATA.trend,560,170,'#00c6be',DATA.trendYears);
+  renderHBar(document.getElementById('pip-geo'),DATA.geo,'130px');
+  renderHBar(document.getElementById('pip-indications'),DATA.indications,'180px');
+}
+
+function funnelDrill(phase, n) {
+  const dd=document.getElementById('pip-funnel-drilldown');
+  dd.style.display='block';
+  dd.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-left:3px solid var(--teal);padding:14px 16px;">
+    <div style="font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px">${phase} — Drill Down</div>
+    <div style="font-size:12px;color:var(--text)">
+      <b>${n.toLocaleString()}</b> trials in ${phase} globally.<br>
+      Top indications: <b>Oncology (38%)</b>, CNS (18%), Immunology (14%), Metabolic (12%), Cardiovascular (9%).<br>
+      Median time-in-phase: <b>${phase==='Phase III'?'28':'phase'==='Phase II'?'22':'14'} months</b> (industry avg).<br>
+      OAI rate (reaching NDA/BLA): <b>31%</b> from Phase II, <b>58%</b> from Phase III.
+    </div>
+  </div>`;
+}
+
+function barDrillDown(label) {
+  const ind=DATA.indications.find(d=>d.label===label);
+  if(!ind) return;
+  openModal(`Indication Drill-Down: ${label}`,`
+    <div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">Active Trials</div><div class="modal-stat-val">${ind.val.toLocaleString()}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Therapeutic Area</div><div class="modal-stat-val" style="font-size:14px;color:var(--text)">${ind.ta}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Phase Distribution Estimate</div>
+      ${['Phase I (~40%)','Phase II (~35%)','Phase III (~20%)','NDA/BLA (~5%)'].map(p=>`<div class="modal-row"><div class="modal-row-label">${p.split('(')[0]}</div><div class="modal-row-val">${p.split('(')[1]?.replace(')','')}</div></div>`).join('')}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Key Sponsors Active</div>
+      ${['Roche / Genentech','Novartis','AstraZeneca','Bristol Myers Squibb','Emerging biotechs'].map(s=>`<div class="modal-row"><div class="modal-row-label">${s}</div><div class="modal-row-val">Active</div></div>`).join('')}
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);padding:12px;margin-top:8px;font-size:11px;color:var(--dim);">Click "Molecules" in the sidebar to filter the molecule browser by this indication.</div>
+  `);
+}
+
+/* ════════════════════════════════════
+   MOLECULE PAGE
+════════════════════════════════════ */
+function filterMolsData() {
+  const q=(document.getElementById('mol-q')?.value||'').toLowerCase();
+  const ph=document.getElementById('mol-phase')?.value||'all';
+  const ta=document.getElementById('mol-ta')?.value||'all';
+  const bd=document.getElementById('mol-bd')?.value||'all';
+  const sf=document.getElementById('mol-safety')?.value||'all';
+  filteredMols=DATA.molecules.filter(m=>{
+    if(q && !Object.values(m).some(v=>String(v).toLowerCase().includes(q))) return false;
+    if(ph!=='all' && m.phase!==ph) return false;
+    if(ta!=='all' && m.ta!==ta) return false;
+    if(bd!=='all' && m.bd!==bd) return false;
+    if(sf!=='all' && m.safety!==sf) return false;
+    return true;
+  });
+  filteredMols.sort((a,b)=> molSortDir*(a[molSortKey]<b[molSortKey]?-1:1));
+  molCurrentPage=0;
+}
+
+function renderMolTable() {
+  filterMolsData();
+  const start=molCurrentPage*molPageSize;
+  const slice=filteredMols.slice(start,start+molPageSize);
+  document.getElementById('mol-count').textContent=filteredMols.length;
+  document.getElementById('mol-page-info').textContent=`Page ${molCurrentPage+1} of ${Math.ceil(filteredMols.length/molPageSize)||1}`;
+  document.getElementById('mol-prev').disabled=molCurrentPage===0;
+  document.getElementById('mol-next').disabled=start+molPageSize>=filteredMols.length;
+  const phMap={ph1:'ph1 pill',ph2:'ph2 pill',ph3:'ph3 pill',ph4:'ph4 pill'};
+  const phLabel={ph1:'Phase I',ph2:'Phase II',ph3:'Phase III',ph4:'Registered'};
+  const sfCls={Low:'pill-low',Medium:'pill-med',High:'pill-high'};
+  const bdCls={Available:'pill-avail',Proprietary:'pill-prop',Partnered:'pill-part',Acquired:'ph4 pill'};
+  document.getElementById('mol-tbody').innerHTML=slice.map(m=>`
+    <tr onclick="openMolModal('${m.name}')">
+      <td style="font-family:var(--mono);font-size:12px;color:var(--white);font-weight:600">${m.name}</td>
+      <td><span class="pill ${phMap[m.phase]||'ph1 pill'}">${phLabel[m.phase]||m.phase}</span></td>
+      <td>${m.ta}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.indication}</td>
+      <td>${m.sponsor}</td>
+      <td style="font-size:11px;color:var(--dim)">${m.moa}</td>
+      <td><span class="${sfCls[m.safety]||''}">${m.safety}</span></td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--gold)">${m.patent}</td>
+      <td style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--teal)">${m.bdos}</td>
+      <td><span class="pill ${bdCls[m.bd]||''}">${m.bd}</span></td>
+    </tr>`).join('');
+}
+
+function sortMols(key) {
+  if(molSortKey===key) molSortDir*=-1; else {molSortKey=key;molSortDir=-1;}
+  renderMolTable();
+}
+
+function molPage(dir) {
+  const maxPage=Math.ceil(filteredMols.length/molPageSize)-1;
+  molCurrentPage=Math.max(0,Math.min(maxPage,molCurrentPage+dir));
+  renderMolTable();
+}
+
+function renderMolCharts() {
+  const patentData=DATA.patents.map(p=>({label:`${p.drug} (${p.expiry})`,val:`$${p.rev}B`,pct:Math.round(p.rev/21*100),col:p.col}));
+  renderHBar(document.getElementById('mol-patent'),patentData,'170px');
+  renderHBar(document.getElementById('mol-moa'),DATA.moa,'160px');
+}
+
+function openMolModal(name) {
+  const m=DATA.molecules.find(d=>d.name===name);
+  if(!m) return;
+  const phLabel={ph1:'Phase I',ph2:'Phase II',ph3:'Phase III',ph4:'Registered/Approved'};
+  const sfColor={Low:'var(--green)',Medium:'var(--gold)',High:'var(--red)'};
+  openModal(`${m.name} — Molecule Intelligence Profile`,`
+    <div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">Phase</div><div class="modal-stat-val" style="font-size:14px">${phLabel[m.phase]||m.phase}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">BDOS Score</div><div class="modal-stat-val">${m.bdos} / 100</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">BD Status</div><div class="modal-stat-val" style="font-size:14px">${m.bd}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Safety Signal</div><div class="modal-stat-val" style="color:${sfColor[m.safety]};font-size:14px">${m.safety}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Molecule Profile</div>
+      ${[['Indication',m.indication],['Therapeutic Area',m.ta],['Sponsor',m.sponsor],['MOA / Class',m.moa],['Regulatory Designations',m.reg],['Patent Expiry',m.patent]].map(r=>`<div class="modal-row"><div class="modal-row-label">${r[0]}</div><div class="modal-row-val">${r[1]}</div></div>`).join('')}
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">BD / Deal Structure Estimates</div>
+      ${[['Est. Upfront',m.upfront],['Est. Total Milestones',m.milestones],['Royalty Range',m.royalty]].map(r=>`<div class="modal-row"><div class="modal-row-label">${r[0]}</div><div class="modal-row-val" style="color:var(--gold)">${r[1]}</div></div>`).join('')}
+    </div>
+    <div style="background:rgba(0,198,190,0.06);border:1px solid rgba(0,198,190,0.2);padding:12px;font-size:11px;color:var(--dim);margin-top:4px;">
+      <b style="color:var(--teal)">VC Note:</b> BDOS ${m.bdos}/100. ${m.bdos>=80?'High-priority BD target — recommend initiating contact with sponsor BD team.':m.bdos>=65?'Moderate BD interest — monitor phase progression before approach.':'Early stage — watchlist for phase advancement.'}
+    </div>
+  `);
+}
+
+/* ════════════════════════════════════
+   SPONSORS PAGE
+════════════════════════════════════ */
+function renderSponsors() {
+  const q=(document.getElementById('sp-q')?.value||'').toLowerCase();
+  const reg=document.getElementById('sp-region')?.value||'all';
+  const sz=document.getElementById('sp-size')?.value||'all';
+  let data=DATA.sponsors.filter(s=>{
+    if(q && !s.name.toLowerCase().includes(q)) return false;
+    if(reg!=='all' && s.region!==reg) return false;
+    if(sz!=='all') {
+      if(sz==='big' && s.size!=='big') return false;
+      if(sz==='mid' && s.size!=='mid') return false;
+      if(sz==='small' && s.size!=='small') return false;
+    }
+    return true;
+  });
+  const rankEl=document.getElementById('sp-rank-list');
+  rankEl.innerHTML=data.map((s,i)=>`
+    <div style="display:grid;grid-template-columns:22px 1fr auto auto;gap:10px;align-items:center;background:var(--bg2);padding:10px 12px;margin-bottom:1px;cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background='var(--bg2)'" onclick="openSponsorModal('${s.name}')">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">${i+1}</div>
+      <div><div style="font-size:13px;color:var(--text)">${s.name}</div><div style="font-size:10px;color:var(--muted)">${s.region} · ${s.size==='big'?'Big Pharma':s.size==='mid'?'Mid-Size':'Biotech'}</div></div>
+      <div style="font-family:var(--mono);font-size:13px;color:var(--teal);font-weight:600">${s.n}</div>
+      <div style="font-family:var(--mono);font-size:10px;padding:2px 8px;background:var(--gold-d);border:1px solid rgba(201,168,76,0.25);color:var(--gold)">BDOS ${s.bdos}</div>
+    </div>`).join('');
+
+  const bdosEl=document.getElementById('sp-bdos-list');
+  const bdTargets=DATA.sponsors.filter(s=>s.bdos>=72&&s.size!=='big').slice(0,5);
+  bdosEl.innerHTML=bdTargets.map(s=>`
+    <div style="background:var(--bg2);padding:14px;margin-bottom:1px;cursor:pointer;" onclick="openSponsorModal('${s.name}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div style="font-size:13px;color:var(--white)">${s.name}</div>
+        <span style="font-family:var(--mono);font-size:10px;padding:2px 8px;background:rgba(0,198,190,0.1);border:1px solid rgba(0,198,190,0.25);color:var(--teal)">BD Target</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:3px">BDOS Score</div><div style="background:var(--bg);height:6px;"><div style="width:${s.bdos}%;height:100%;background:var(--gold);"></div></div></div>
+        <div><div style="font-family:var(--mono);font-size:9px;color:var(--muted);margin-bottom:3px">Pipeline Fit</div><div style="background:var(--bg);height:6px;"><div style="width:${s.bdos-8}%;height:100%;background:var(--teal);"></div></div></div>
+      </div>
+    </div>`).join('');
+
+  const dealsEl=document.getElementById('sp-deals-feed');
+  dealsEl.innerHTML=DATA.deals.slice(0,6).map(d=>`
+    <div style="display:grid;grid-template-columns:48px 1fr auto;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);align-items:start;cursor:pointer;" onclick="openDealModal(${JSON.stringify(d).replace(/"/g,'&quot;')})">
+      <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">${d.year}</div>
+      <div><div style="font-size:12px;color:var(--text)">${d.asset}</div><div style="font-size:10px;color:var(--muted)">${d.acquirer} → ${d.target}</div></div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--gold);text-align:right;white-space:nowrap">${d.upfront}</div>
+    </div>`).join('');
+
+  renderHBar(document.getElementById('sp-phase-mix'),[
+    {label:'Big Pharma Ph III',val:'36%',pct:100,col:'#c9a84c'},
+    {label:'Biotech Ph II',val:'28%',pct:78,col:'#00c6be'},
+    {label:'Biotech Ph I',val:'52%',pct:100,col:'#4a9eff'},
+    {label:'Big Pharma Ph I',val:'18%',pct:50,col:'#9b6dff'},
+  ],'150px');
+  renderHBar(document.getElementById('sp-reg-premium'),DATA.regPremium.slice(0,4),'160px');
+}
+
+function openSponsorModal(name) {
+  const s=DATA.sponsors.find(d=>d.name===name);
+  if(!s) return;
+  openModal(`${s.name} — Sponsor Intelligence Dossier`,`
+    <div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">Active Trials</div><div class="modal-stat-val">${s.n}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">BDOS Score</div><div class="modal-stat-val">${s.bdos} / 100</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Phase III Assets</div><div class="modal-stat-val">${s.phase3}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Annual Revenue</div><div class="modal-stat-val" style="font-size:14px">${s.revenue}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Company Profile</div>
+      ${[['HQ Region',s.region],['Company Type',s.size==='big'?'Big Pharma (>$20B rev)':s.size==='mid'?'Mid-Size ($1–20B)':'Biotech (<$1B)'],['Revenue Note',s.revNote||'FY2024 estimate'],['Recent M&A',s.acq]].map(r=>`<div class="modal-row"><div class="modal-row-label">${r[0]}</div><div class="modal-row-val">${r[1]}</div></div>`).join('')}
+    </div>
+    <div style="background:rgba(0,198,190,0.06);border:1px solid rgba(0,198,190,0.2);padding:12px;font-size:11px;color:var(--dim);">
+      <b style="color:var(--teal)">BD Recommendation:</b> ${s.bdos>=85?'High priority target. Pipeline depth + BDOS suggests strong acquisition or licensing candidate. Recommend BD outreach within 90 days.':s.bdos>=75?'Moderate priority. Monitor pipeline phase advancements. Consider partnership/co-development structures.':'Watchlist. Early pipeline — track for phase II readouts before approach.'}
+    </div>
+  `);
+}
+
+/* ════════════════════════════════════
+   THERAPEUTIC PAGE
+════════════════════════════════════ */
+function renderTA() {
+  const ta=document.getElementById('ta-select')?.value||'all';
+  const d=DATA.taData[ta]||DATA.taData.all;
+  const kpis=[
+    {l:'Active Trials',v:d.trials.toLocaleString(),delta:`↑ ${d.growth}% YOY`},
+    {l:'Market Size 2024E',v:`$${d.market}B`,delta:`→ $${d.mkt30||Math.round(d.market*1.45)}B by 2030`},
+    {l:'Likelihood of Approval (LoS)',v:`${d.los}%`,delta:'Phase I → NDA/BLA approval'},
+    {l:'Trial Volume Growth',v:`+${d.growth}%`,delta:'YOY · 2024 vs 2023'},
+  ];
+  document.getElementById('ta-kpis').innerHTML=kpis.map(k=>`<div class="kpi-card"><div class="kpi-label">${k.l}</div><div class="kpi-val">${k.v}</div><div class="kpi-delta up">${k.delta}</div></div>`).join('');
+
+  const mktSvg=document.getElementById('ta-mkt');
+  const mktActual=[0.62,0.68,0.74,0.82,0.91,1.0].map(f=>Math.round(d.market*f));
+  const mkt30=d.mkt30||Math.round(d.market*1.45);
+  const mktProj=[1.0,1.13,1.27,1.44,1.62,1.82].map(f=>Math.round(mkt30*f/1.82));
+  const mktFull=[...mktActual,...mktProj.slice(1)];
+  if(mktSvg) renderLineSVG(mktSvg,mktFull,520,180,'#c9a84c',['2020','2021','2022','2023','2024','25E','26E','27E','28E','29E','30E']);
+  if(document.getElementById('ta-mkt-badge')) document.getElementById('ta-mkt-badge').textContent=`$${d.market}B→$${mkt30}B`;
+  renderHBar(document.getElementById('ta-growth'),DATA.taGrowth,'140px');
+  renderHBar(document.getElementById('ta-los'),DATA.taLoS.map(t=>({...t,val:`${t.val}%`})),'160px');
+
+  const fail=d.failures;
+  const failEl=document.getElementById('ta-failure');
+  const total=Object.values(fail).reduce((a,b)=>a+b,0);
+  const cols={safety:'#e05252',efficacy:'#9b6dff',commercial:'#c9a84c',regulatory:'#4a9eff'};
+  failEl.innerHTML=`<div style="margin-bottom:12px;font-family:var(--mono);font-size:10px;color:var(--dim);">Why trials fail in <b style="color:var(--teal)">${ta==='all'?'All TAs':ta}</b>:</div>`+
+    Object.entries(fail).map(([k,v])=>`
+    <div class="hbar-row" style="cursor:default">
+      <div class="hbar-lbl" style="width:100px;text-transform:capitalize">${k}</div>
+      <div class="hbar-track"><div class="hbar-fill" style="width:${Math.round(v/total*100)}%;background:${cols[k]||'#5a7a9a'}"></div></div>
+      <div class="hbar-val">${v}%</div>
+    </div>`).join('')+
+    `<div style="margin-top:14px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);font-size:11px;color:var(--dim);">
+      <b style="color:var(--teal)">VC Implication:</b> ${fail.safety>fail.efficacy?'Safety-dominated failure mode — licensing safety-failed assets is high-risk. Prioritize assets with early safety confirmation.':'Efficacy-dominated failure — endpoint selection quality is the key due diligence lens.'}
+    </div>`;
+}
+
+/* ════════════════════════════════════
+   DEALS PAGE
+════════════════════════════════════ */
+function renderDeals() {
+  const ph=document.getElementById('deal-phase')?.value||'all';
+  const ta=document.getElementById('deal-ta')?.value||'all';
+  const tp=document.getElementById('deal-type')?.value||'all';
+  let data=DATA.deals.filter(d=>{
+    if(ph!=='all'&&d.phase!==ph) return false;
+    if(ta!=='all'&&d.ta!==ta) return false;
+    if(tp!=='all'&&d.type!==tp) return false;
+    return true;
+  });
+  document.getElementById('deal-count').textContent=data.length;
+
+  renderHBar(document.getElementById('deal-upfront'),[
+    {label:'Post-Approval',val:'$3.2B avg',pct:100,col:'#c9a84c'},
+    {label:'Phase III',val:'$480M avg',pct:72,col:'#9b6dff'},
+    {label:'Phase II',val:'$142M avg',pct:28,col:'#00c6be'},
+    {label:'Phase I',val:'$55M avg',pct:12,col:'#4a9eff'},
+  ],'120px');
+
+  renderHBar(document.getElementById('deal-ta-bars'),[
+    {label:'Oncology',val:42,pct:100,col:'#e05252'},
+    {label:'CNS',val:22,pct:52,col:'#9b6dff'},
+    {label:'Immunology',val:18,pct:43,col:'#00c6be'},
+    {label:'Rare Disease',val:14,pct:33,col:'#c9a84c'},
+    {label:'Metabolic',val:12,pct:29,col:'#4a9eff'},
+    {label:'Cardiovascular',val:8,pct:19,col:'#3cc98a'},
+  ],'110px');
+
+  const listEl=document.getElementById('deal-list');
+  listEl.innerHTML=data.map(d=>`
+    <div style="display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;" onmouseenter="this.style.background='var(--bg3)'" onmouseleave="this.style.background='transparent'" onclick="openDealModal(${JSON.stringify(d).replace(/"/g,'&quot;')})">
+      <div>
+        <div style="font-size:13px;color:var(--white)">${d.asset}</div>
+        <div style="font-size:10px;color:var(--dim)">${d.acquirer} ← ${d.target} · ${d.year} · ${d.phase}</div>
+      </div>
+      <span style="font-family:var(--mono);font-size:9px;padding:2px 8px;background:var(--bg2);border:1px solid var(--border);color:var(--dim)">${d.ta}</span>
+      <span style="font-family:var(--mono);font-size:9px;padding:2px 8px;background:${d.type==='Acquisition'?'var(--gold-d)':d.type==='Licensing'?'var(--teal-d)':'rgba(155,109,255,0.1)'};border:1px solid ${d.type==='Acquisition'?'rgba(201,168,76,0.25)':d.type==='Licensing'?'rgba(0,198,190,0.25)':'rgba(155,109,255,0.25)'};color:${d.type==='Acquisition'?'var(--gold)':d.type==='Licensing'?'var(--teal)':'var(--purple)'}">${d.type}</span>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--gold);text-align:right;white-space:nowrap">${d.upfront}</div>
+    </div>`).join('');
+}
+
+function openDealModal(d) {
+  if(typeof d==='string') d=JSON.parse(d);
+  openModal(`Deal: ${d.asset}`,`
+    <div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">Upfront</div><div class="modal-stat-val">${d.upfront}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Total Potential</div><div class="modal-stat-val">${d.total}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Royalty Rate</div><div class="modal-stat-val" style="font-size:14px">${d.royalty}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Deal Year</div><div class="modal-stat-val">${d.year}</div></div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Deal Details</div>
+      ${[['Acquirer/Licensee',d.acquirer],['Target',d.target],['Phase at Deal',d.phase],['Therapeutic Area',d.ta],['Deal Type',d.type]].map(r=>`<div class="modal-row"><div class="modal-row-label">${r[0]}</div><div class="modal-row-val">${r[1]}</div></div>`).join('')}
+    </div>
+  `);
+}
+
+/* ════════════════════════════════════
+   WHITESPACE PAGE
+════════════════════════════════════ */
+function renderWhitespace() {
+  renderHBar(document.getElementById('ws-rank'),DATA.whitespace.map(d=>({...d,val:d.ws,pct:d.ws})),'160px');
+  const plot=document.getElementById('ws-plot');
+  plot.innerHTML='';
+  DATA.whitespace.forEach(d=>{
+    const dot=document.createElement('div');
+    const x=d.density*300+10;
+    const y=(100-d.ws)*0.8;
+    const size=d.market*2.5;
+    dot.style.cssText=`position:absolute;width:${size}px;height:${size}px;border-radius:50%;background:${d.col};opacity:0.75;left:${x}px;bottom:${(100-y)}%;transform:translateY(50%);cursor:pointer;transition:transform 0.2s;`;
+    dot.title=`${d.label}: WS ${d.ws}, Market $${d.market}B, Density ${d.density}`;
+    dot.onmouseenter=()=>dot.style.transform='translateY(50%) scale(1.4)';
+    dot.onmouseleave=()=>dot.style.transform='translateY(50%)';
+    dot.onclick=()=>openModal(`Whitespace: ${d.label}`,`<div class="modal-grid">
+      <div class="modal-stat"><div class="modal-stat-label">WS Score</div><div class="modal-stat-val">${d.ws}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Market Size</div><div class="modal-stat-val">$${d.market}B</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Competitive Density</div><div class="modal-stat-val">${d.density}</div></div>
+      <div class="modal-stat"><div class="modal-stat-label">Opportunity Type</div><div class="modal-stat-val" style="font-size:13px">Licensing / Acq</div></div>
+    </div><div style="padding:12px;background:rgba(0,198,190,0.06);border:1px solid rgba(0,198,190,0.2);font-size:11px;color:var(--dim);margin-top:8px;"><b style="color:var(--teal)">BD Action:</b> ${d.ws>=85?'Immediate opportunity — high unmet need with minimal competition. First-mover advantage possible. Begin landscape assessment now.':'Emerging opportunity — monitor for new entrants. 12–18 month BD window before crowding.'}</div>`);
+    plot.appendChild(dot);
+  });
+
+  const emEl=document.getElementById('ws-emerging');
+  emEl.innerHTML=`<div class="grid g12 grid-gap">
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--teal);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;">India — Underfunded High-Quality Assets</div>
+      ${[{name:'Novel BTK Inhibitor (Lupin)',phase:'Phase II',indication:'Autoimmune',val:'Est $60M upfront'},
+         {name:'FDC Cardio Portfolio',phase:'Phase I',indication:'Heart Failure',val:'Est $40M upfront'},
+         {name:'Anti-TB Combination',phase:'Phase III',indication:'TB (MDR)',val:'Est $80M upfront'}]
+        .map(e=>`<div style="padding:10px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer"><div style="font-size:12px;color:var(--white)">${e.name}</div><div style="font-size:10px;color:var(--dim)">${e.phase} · ${e.indication}</div><div style="font-family:var(--mono);font-size:10px;color:var(--gold);margin-top:4px">${e.val}</div></div>`).join('')}
+    </div>
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--gold);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;border-bottom:1px solid var(--border);padding-bottom:8px;">China — Pre-Westernization BD Windows</div>
+      ${[{name:'BeiGene PD-L1/LAG-3 bsAb',phase:'Phase II',indication:'Solid Tumors',val:'Pre-global licensing window'},
+         {name:'Zymeworks ADCP-ADC',phase:'Phase I',indication:'HER2+ Cancers',val:'Early access opportunity'},
+         {name:'Innovent GLP-1 mAb',phase:'Phase II',indication:'Obesity/T2D',val:'Strategic partnership signal'}]
+        .map(e=>`<div style="padding:10px;background:var(--bg2);border-bottom:1px solid var(--border);cursor:pointer"><div style="font-size:12px;color:var(--white)">${e.name}</div><div style="font-size:10px;color:var(--dim)">${e.phase} · ${e.indication}</div><div style="font-family:var(--mono);font-size:10px;color:var(--gold);margin-top:4px">${e.val}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+/* ════════════════════════════════════
+   SOURCES PAGE
+════════════════════════════════════ */
+function renderSources() {
+  const sources=[
+    {tier:'Tier 1 — Primary Registries',items:['ClinicalTrials.gov (USA — NCT database)','EudraCT / CTIS (European Union)','WHO ICTRP (Global aggregator)','CTRI (India), ChiCTR (China)','ANZCTR (Australia / New Zealand)','ISRCTN Registry (UK)']},
+    {tier:'Tier 2 — Regulatory & Approval',items:['FDA NDA / BLA / ANDA approvals','EMA EPAR database','FDA Orange Book & Purple Book','Orphan Drug Designation database','Fast Track / Breakthrough / PRIME','SEC & 10-K filings']},
+    {tier:'Tier 3 — Market & Commercial',items:['Company annual reports','Historical sales data (approved molecules)','Patent database (USPTO, EPO, WIPO)','Licensing transaction database','Journals & PubMed publications','WHO Global Medicine Statistics']},
+    {tier:'Tier 4 — Proprietary Analytics',items:['Molecule taxonomy (MOA classification)','BD Opportunity Score (BDOS) model','Safety signal aggregation algorithm','Patent cliff detection + biosimilar model','Phase transition probability matrices','Whitespace composite scoring index']},
+  ];
+  document.getElementById('sources-grid').innerHTML=sources.map(s=>`
+    <div class="card">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--teal);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)">${s.tier}</div>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:7px;">
+        ${s.items.map(i=>`<li style="font-size:12px;color:var(--dim);display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border)"><span style="color:var(--teal);flex-shrink:0">›</span>${i}</li>`).join('')}
+      </ul>
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════
+   GAP FAILURE GRID (Gap page section 3)
+════════════════════════════════════ */
+function renderGaps() {
+  const el=document.getElementById('gap-failure-grid');
+  if(!el) return;
+  const tas=[
+    {ta:'Oncology',fail:DATA.taData.oncology.failures,col:'#e05252'},
+    {ta:'CNS',fail:DATA.taData.cns.failures,col:'#9b6dff'},
+    {ta:'Immunology',fail:DATA.taData.immuno.failures,col:'#00c6be'},
+    {ta:'Cardiovascular',fail:DATA.taData.cardio.failures,col:'#4a9eff'},
+  ];
+  const cols={safety:'#e05252',efficacy:'#9b6dff',commercial:'#c9a84c',regulatory:'#4a9eff'};
+  el.innerHTML=tas.map(t=>`
+    <div style="background:var(--bg2);border:1px solid var(--border);padding:12px;">
+      <div style="font-family:var(--mono);font-size:10px;color:${t.col};letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px">${t.ta}</div>
+      ${Object.entries(t.fail).map(([k,v])=>`
+        <div class="hbar-row" style="cursor:default;margin-bottom:5px">
+          <div class="hbar-lbl" style="width:80px;text-transform:capitalize;font-size:10px">${k}</div>
+          <div class="hbar-track"><div class="hbar-fill" style="width:${v}%;background:${cols[k]}"></div></div>
+          <div class="hbar-val">${v}%</div>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+/* ════════════════════════════════════
+   FILTER RESETS
+════════════════════════════════════ */
+function resetFilters(prefix) {
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(el=>{
+    if(el.tagName==='SELECT') el.value='all';
+    if(el.tagName==='INPUT') el.value='';
+  });
+  const renders={pip:renderPipeline,mol:()=>{renderMolTable();},sp:renderSponsors,deal:renderDeals};
+  if(renders[prefix]) renders[prefix]();
+}
+
+/* ════════════════════════════════════
+   INIT
+════════════════════════════════════ */
+(async () => {
+  await loadLiveData();
+  filteredMols = [...DATA.molecules];
+  renderPipeline();
+  renderMolTable();
+  renderMolCharts();
+  renderSponsors();
+  renderTA();
+  renderDeals();
+  renderWhitespace();
+  renderSources();
+  renderGaps();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "cliniqiq",
+  "version": "2.0.0",
+  "description": "ClinIQ — Clinical Intelligence Platform v2 with live Supabase backend",
+  "main": "orchestrator.js",
+  "scripts": {
+    "start": "node orchestrator.js",
+    "run-once": "node orchestrator.js --run-once",
+    "load-data": "node load-cliniq-data.js",
+    "validate": "node -e \"require('./orchestrator.js')\" --dry-run 2>&1 | head -5 || true"
+  },
+  "dependencies": {
+    "node-cron": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["clinical-trials", "pharma", "bd-intelligence", "supabase", "etl"],
+  "author": "Pat (Prafull Patil)",
+  "license": "MIT"
+}

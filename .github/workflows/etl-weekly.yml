@@ -1,0 +1,46 @@
+name: ClinIQ Weekly ETL Refresh
+
+on:
+  schedule:
+    # Every Monday at 6am SGT (10pm Sunday UTC)
+    - cron: '0 22 * * 0'
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: 'Run specific job (j1-j10) or leave blank for all'
+        required: false
+        default: ''
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ETL jobs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          if [ -n "${{ github.event.inputs.job_id }}" ]; then
+            echo "Running single job: ${{ github.event.inputs.job_id }}"
+            node orchestrator.js --run-once --job=${{ github.event.inputs.job_id }}
+          else
+            echo "Running all ETL jobs..."
+            node orchestrator.js --run-once
+          fi
+
+      - name: ETL summary
+        run: |
+          echo "## 🔄 ClinIQ ETL Complete" >> $GITHUB_STEP_SUMMARY
+          echo "⏱️ Run at: $(date -u '+%Y-%m-%d %H:%M UTC')" >> $GITHUB_STEP_SUMMARY
